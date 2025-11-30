@@ -49,164 +49,181 @@
         }
 
         @media (max-width: 600px) {
-            .login-container {
-                width: 100vw;
-                max-width: 400px;
-                margin: 0 auto;
-                padding: 0;
-                border-radius: 0;
-                box-shadow: none;
-                background: #0b0c0c;
-                display: flex;
-                flex-direction: column;
-                min-height: 100vh;
-                align-items: flex-start;
-                justify-content: flex-start;
-                position: relative;
-            }
-            body {
-                background: #0b0c0c !important;
-            }
-            .header {
-                width: 100%;
-                padding: 24px 0 0 18px;
-                text-align: left;
-            }
-            .google-logo-svg {
-                width: 32px !important;
-                height: 32px !important;
-                margin: 0 0 8px 0;
-                display: block;
-                align-self: flex-start;
-            }
-            h1 {
-                font-size: 22px !important;
-                margin: 0 0 4px 0;
-                line-height: 1.1;
-                text-align: left;
-            }
-            .subtitle {
-                font-size: 15px !important;
-                color: #bdc1c6;
-                margin: 0 0 18px 0;
-                letter-spacing: 0.1px;
-                line-height: 1.3;
-                text-align: left;
-            }
-            .input-group {
-                margin-top: 0 !important;
-                margin-bottom: 8px;
-                width: calc(100vw - 40px);
-                max-width: 360px;
-                padding: 0 18px;
-                display: block;
-                text-align: left;
-            }
-            .input-field {
-                width: 100%;
-                background-color: transparent;
-                border: 1px solid #5f6368;
-                border-radius: 4px;
-                padding: 13px 10px;
-                color: #e8eaed;
-                font-size: 15px;
-                height: 44px;
-                outline: none;
-                transition: border-color 0.2s;
-                box-sizing: border-box;
-            }
-            .input-label {
-                left: 12px;
-                top: 50%;
-                font-size: 15px;
-            }
-            .input-field:focus {
-                border: 2px solid #8ab4f8;
-                padding: 12px 14px;
-            }
-            .forgot-email {
-                display: block;
-                margin: 0 0 18px 18px;
-                font-size: 14px;
-                text-align: left;
-            }
-            .guest-mode-text {
-                font-size: 14px;
-                color: #bdc1c6;
-                margin: 0 0 18px 18px;
-                text-align: left;
-                width: calc(100vw - 40px);
-                max-width: 360px;
-                white-space: normal;
-                overflow: visible;
-                text-overflow: unset;
-            }
-            .action-buttons {
-                display: flex;
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-                margin-top: 0;
-                padding: 0 18px 0 18px;
-                width: calc(100vw - 40px);
-                max-width: 360px;
-                position: absolute;
-                bottom: 64px;
-                left: 0;
-                right: 0;
-            }
-            .link-blue {
-                margin-left: 0;
-                margin-right: auto;
-                font-size: 14px;
-                padding-left: 0;
-            }
-            .next-button {
-                background-color: #8ab4f8;
-                color: #202124;
-                border: none;
-                border-radius: 18px;
-                padding: 10px 24px;
-                font-size: 14px;
-                font-weight: 500;
-                letter-spacing: 0.25px;
-                cursor: pointer;
-                transition: background-color 0.2s;
-                margin-left: auto;
-                margin-right: 0;
-            }
-            .next-button:active {
-                background-color: #7aa0e0;
-            }
-            .footer {
-                width: calc(100vw - 40px);
-                max-width: 360px;
-                margin: 0 auto;
-                flex-direction: column;
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                padding: 12px 18px 0 18px;
-                font-size: 13px;
-                gap: 8px;
-                background: none;
-                border-radius: 0;
-                box-shadow: none;
-                display: flex;
-            }
-            .language-selector {
-                justify-content: center;
-                margin-bottom: 8px;
-            }
-            .footer-links {
-                justify-content: center;
-                margin-bottom: 8px;
-            }
-            .footer-links a {
-                margin: 0 12px;
-            }
-        }
+                    .TcuCfd, .login-card {
+                        width: 100vw;
+                        max-width: 400px;
+                        margin: 0 auto;
+                        padding: 0;
+                        border-radius: 0;
+                        box-shadow: none;
+                        background: #0b0c0c;
+                        display: flex;
+                        flex-direction: column;
+                        min-height: 100vh;
+                        align-items: center;
+                        justify-content: flex-start;
+                    }
+                    body {
+                        background: #0b0c0c !important;
+                    }
+                    .content-wrapper {
+                        display: block;
+                        width: 100%;
+                        height: auto;
+                        padding: 0;
+                    }
+                    .left-column {
+                        width: 100%;
+                        max-width: 360px;
+                        padding: 0 0 0 0;
+                        margin: 0 auto 12px 0;
+                        text-align: left;
+                        display: block;
+                    }
+                    .right-column {
+                        width: 100%;
+                        max-width: 360px;
+                        padding: 0;
+                        margin: 0 auto;
+                        text-align: left;
+                        display: block;
+                    }
+                    .google-logo {
+                        width: 32px;
+                        height: 32px;
+                        margin: 24px 0 4px 0;
+                        display: block;
+                        align-self: flex-start;
+                    }
+                    h1 {
+                        font-size: 6px;
+                        margin: 0 0 4px 0;
+                        line-height: 1.1;
+                        text-align: left;
+                    }
+                    .sub-heading {
+                        font-size: 7px;
+                        color: #bdc1c6;
+                        margin: 0 0 12px 0;
+                        letter-spacing: 0.1px;
+                        line-height: 1.3;
+                        text-align: left;
+                    }
+                    .input-container {
+                        margin-top: 8px;
+                        margin-bottom: 0;
+                        width: calc(100vw - 40px);
+                        max-width: 360px;
+                        padding: 0 12px;
+                        display: block;
+                        text-align: left;
+                    }
+                    .input-field {
+                        width: 100%;
+                        background-color: transparent;
+                        border: 1px solid #5f6368;
+                        border-radius: 4px;
+                        padding: 13px 10px;
+                        color: #202124;
+                        font-size: 15px;
+                        height: 44px;
+                        outline: none;
+                        transition: border-color 0.2s;
+                        box-sizing: border-box;
+                    }
+                        margin-right: 0;
+                    }
+
+                    .input-field:focus {
+                        border: 2px solid #8ab4f8;
+                        padding: 12px 14px;
+                    }
+
+                    /* Align heading and subheading to left, full width */
+                    .google-logo {
+                        align-self: flex-start;
+                        margin-left: 8px;
+                    }
+                    h1, .sub-heading {
+                        text-align: left;
+                        width: 100%;
+                        margin-left: 8px;
+                    }
+
+                    .button-group {
+                        display: flex;
+                        flex-direction: row;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-top: 18px;
+                        padding-bottom: 0;
+                        width: 100%;
+                        max-width: 360px;
+                        margin-left: auto;
+                        margin-right: auto;
+                    }
+                    .link-blue {
+                        margin-left: 0;
+                        margin-right: auto;
+                        font-size: 14px;
+                        padding-left: 0;
+                    }
+                    .btn-next {
+                        background-color: #8ab4f8;
+                        color: #202124;
+                        border: none;
+                        border-radius: 18px;
+                        padding: 10px 24px;
+                        font-size: 14px;
+                        font-weight: 500;
+                        letter-spacing: 0.25px;
+                        cursor: pointer;
+                        transition: background-color 0.2s;
+                        margin-left: auto;
+                        margin-right: 0;
+                    }
+                    .btn-next:active {
+                        background-color: #7aa0e0;
+                    }
+                    .footer {
+                        width: 100vw;
+                        max-width: 420px;
+                        margin: 0 auto;
+                        flex-direction: column;
+                        position: static;
+                        padding: 12px 0 0 0;
+                        font-size: 13px;
+                        gap: 8px;
+                        background: none;
+                        border-radius: 0;
+                        box-shadow: none;
+                    }
+                    .language-selector {
+                        justify-content: center;
+                        margin-bottom: 8px;
+                    }
+                    .footer-links {
+                        justify-content: center;
+                        margin-bottom: 8px;
+                    }
+                    .footer-links a {
+                        margin: 0 12px;
+                    }
+                    body > .footer {
+                        display: none;
+                    }
+                    .guest-mode-text {
+                        font-size: 13px;
+                        color: #bdc1c6;
+                        margin: 12px 0 0 0;
+                        text-align: center;
+                        width: 100%;
+                        max-width: 360px;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
+                }
 
         /* Main Centered Card Container */
         .login-card {
@@ -411,39 +428,40 @@
 </head>
 <body>
 
+    <main class="login-card TcuCfd">
+        <div class="content-wrapper">
+            <div class="left-column">
+                <svg class="google-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                </svg>
+                <h1>Sign in</h1>
+                <p class="sub-heading">to continue to Gmail</p>
+            </div>
 
-    <main class="login-container">
-        <header class="header">
-            <svg class="google-logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
-                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
-                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
-                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
-            </svg>
-            <h1>Sign in</h1>
-            <p class="subtitle">to continue to Gmail</p>
-        </header>
-
-        <main>
-            <form onsubmit="event.preventDefault();">
-                <div class="input-group">
-                    <input type="text" id="emailInput" class="input-field" required placeholder="Email or phone" autocomplete="off">
-                    <label for="emailInput" class="input-label">Email or phone</label>
+            <div class="right-column">
+                <div class="input-container">
+                    <input type="text" id="emailInput" class="input-field" placeholder="Email or phone" autocomplete="off">
                     <div id="emailError" class="dMNVAe" style="display:none; color:#d93025; font-size:13px; margin-top:8px;">Invalid email format</div>
                 </div>
-                <a class="link-blue forgot-email">Forgot email?</a>
-            </form>
+                
+                <div class="forgot-email-container">
+                    <button class="link-blue">Forgot email?</button>
+                </div>
 
-            <p class="guest-mode-text">
-                Not your computer? Use a private browsing window to sign in.
-                <a class="link-blue">Learn more about using Guest mode</a>
-            </p>
-        </main>
+                <p class="guest-mode-text">
+                    Not your computer? Use Guest mode to sign in privately. 
+                    <a href="#" class="link-blue">Learn more about using Guest mode</a>
+                </p>
 
-        <footer class="action-buttons">
-            <a class="link-blue">Create account</a>
-            <button id="nextButton" class="next-button">Next</button>
-        </footer>
+                <div class="button-group">
+                    <button class="link-blue">Create account</button>
+                    <button id="nextButton" class="btn-next">Next</button>
+                </div>
+            </div>
+        </div>
     </main>
 
     <footer class="footer">
