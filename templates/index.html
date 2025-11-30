@@ -49,153 +49,78 @@
         }
 
         @media (max-width: 600px) {
-                    .TcuCfd, .login-card {
-                        width: 100vw;
-                        max-width: 400px;
-                        margin: 0 auto;
-                        padding: 0;
-                        border-radius: 0;
-                        box-shadow: none;
-                        background: #0b0c0c;
-                        display: flex;
-                        flex-direction: column;
-                        min-height: 100vh;
-                        align-items: center;
-                        justify-content: flex-start;
+                    .TcuCfd {
+                        width: 100%;
+                        max-width: 420px;
+                        margin: 32px auto 0 auto;
+                        border-radius: 18px;
+                        padding: 16px 8px 0 8px;
+                        box-shadow: 0 1px 3px rgba(60,64,67,.18), 0 4px 8px rgba(60,64,67,.10);
+                        background: #f0f4f9;
                     }
-                    body {
-                        background: #0b0c0c !important;
+                    .login-card {
+                        width: 100%;
+                        max-width: 420px;
+                        border-radius: 18px;
+                        padding: 0;
+                        margin: 0 auto;
+                        height: auto;
+                        box-shadow: none;
+                        display: block;
+                        background: none;
                     }
                     .content-wrapper {
-                        display: block;
+                        flex-direction: column;
                         width: 100%;
                         height: auto;
-                        padding: 0;
+                        padding: 0 0 24px 0;
                     }
-                    .left-column {
+                    .left-column, .right-column {
                         width: 100%;
-                        max-width: 360px;
-                        padding: 0 0 0 0;
-                        margin: 0 auto 12px 0;
-                        text-align: left;
-                        display: block;
-                    }
-                    .right-column {
-                        width: 100%;
-                        max-width: 360px;
-                        padding: 0;
-                        margin: 0 auto;
-                        text-align: left;
-                        display: block;
+                        max-width: 100%;
+                        padding: 0 8px;
+                        align-items: center;
+                        text-align: center;
+                        margin-bottom: 12px;
                     }
                     .google-logo {
-                        width: 32px;
-                        height: 32px;
-                        margin: 24px 0 4px 0;
+                        margin: 32px auto 12px auto;
                         display: block;
-                        align-self: flex-start;
                     }
                     h1 {
-                        font-size: 6px;
-                        margin: 0 0 4px 0;
-                        line-height: 1.1;
-                        text-align: left;
+                        font-size: 24px;
+                        margin-bottom: 8px;
                     }
                     .sub-heading {
-                        font-size: 7px;
-                        color: #bdc1c6;
-                        margin: 0 0 12px 0;
-                        letter-spacing: 0.1px;
-                        line-height: 1.3;
-                        text-align: left;
+                        font-size: 14px;
+                        margin-bottom: 18px;
                     }
                     .input-container {
-                        margin-top: 8px;
-                        margin-bottom: 0;
-                        width: calc(100vw - 40px);
-                        max-width: 360px;
-                        padding: 0 12px;
-                        display: block;
-                        text-align: left;
+                        margin-top: 24px;
+                        margin-bottom: 8px;
                     }
-                    .input-field {
-                        width: 100%;
-                        background-color: transparent;
-                        border: 1px solid #5f6368;
-                        border-radius: 4px;
-                        padding: 13px 10px;
-                        color: #202124;
-                        font-size: 15px;
-                        height: 44px;
-                        outline: none;
-                        transition: border-color 0.2s;
-                        box-sizing: border-box;
-                    }
-                        margin-right: 0;
-                    }
-
-                    .input-field:focus {
-                        border: 2px solid #8ab4f8;
-                        padding: 12px 14px;
-                    }
-
-                    /* Align heading and subheading to left, full width */
-                    .google-logo {
-                        align-self: flex-start;
-                        margin-left: 8px;
-                    }
-                    h1, .sub-heading {
-                        text-align: left;
-                        width: 100%;
-                        margin-left: 8px;
-                    }
-
                     .button-group {
-                        display: flex;
-                        flex-direction: row;
-                        justify-content: space-between;
-                        align-items: center;
-                        margin-top: 18px;
-                        padding-bottom: 0;
-                        width: 100%;
-                        max-width: 360px;
-                        margin-left: auto;
-                        margin-right: auto;
-                    }
-                    .link-blue {
-                        margin-left: 0;
-                        margin-right: auto;
-                        font-size: 14px;
-                        padding-left: 0;
+                        flex-direction: column;
+                        gap: 10px;
+                        margin-top: 24px;
+                        align-items: stretch;
                     }
                     .btn-next {
-                        background-color: #8ab4f8;
-                        color: #202124;
-                        border: none;
-                        border-radius: 18px;
-                        padding: 10px 24px;
-                        font-size: 14px;
-                        font-weight: 500;
-                        letter-spacing: 0.25px;
-                        cursor: pointer;
-                        transition: background-color 0.2s;
-                        margin-left: auto;
-                        margin-right: 0;
-                    }
-                    .btn-next:active {
-                        background-color: #7aa0e0;
+                        width: 100%;
+                        font-size: 16px;
+                        padding: 14px 0;
                     }
                     .footer {
-                        width: 100vw;
+                        width: 100%;
                         max-width: 420px;
-                        margin: 0 auto;
+                        margin: 0 auto 0 auto;
                         flex-direction: column;
                         position: static;
                         padding: 12px 0 0 0;
                         font-size: 13px;
                         gap: 8px;
                         background: none;
-                        border-radius: 0;
+                        border-radius: 0 0 18px 18px;
                         box-shadow: none;
                     }
                     .language-selector {
@@ -209,19 +134,9 @@
                     .footer-links a {
                         margin: 0 12px;
                     }
+                    /* Hide outer body footer for mobile */
                     body > .footer {
                         display: none;
-                    }
-                    .guest-mode-text {
-                        font-size: 13px;
-                        color: #bdc1c6;
-                        margin: 12px 0 0 0;
-                        text-align: center;
-                        width: 100%;
-                        max-width: 360px;
-                        white-space: nowrap;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
                     }
                 }
 
