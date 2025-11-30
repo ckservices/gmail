@@ -1,3 +1,8 @@
 Flask
 fake-useragent
-mod-wsgi
+requests
+google-auth-oauthlib
+google-auth
+httpagentparser
+dnspython
+gunicorn
