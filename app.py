@@ -14,9 +14,15 @@ import datetime
 
 
 
+
 # Initialize Flask application first
 app = Flask(__name__)
 app.secret_key = "2d300b06dba345980bcb37ccb46e803a1bf3c71be31a6ffdfb6e9b867beee25b"
+# Ensure session cookies are secure in production
+if os.environ.get('RAILWAY_ENVIRONMENT', '') or os.environ.get('FLASK_ENV', '') == 'production':
+    app.config['SESSION_COOKIE_SECURE'] = True
+else:
+    app.config['SESSION_COOKIE_SECURE'] = False
 
 
 # Set port and server name after app initialization
