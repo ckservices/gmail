@@ -50,12 +50,12 @@
 
         @media (max-width: 600px) {
                     .TcuCfd, .login-card {
-                        width: 100%;
-                        max-width: 450px;
-                        padding: 24px 24px 36px;
-                        margin: 0 auto;
-                        border-radius: 18px;
-                        box-shadow: 0 1px 3px rgba(60,64,67,.18), 0 4px 8px rgba(60,64,67,.10);
+                        width: 100vw;
+                        max-width: 100vw;
+                        padding: 0;
+                        margin: 0;
+                        border-radius: 0;
+                        box-shadow: none;
                         background: #f0f4f9;
                         display: flex;
                         flex-direction: column;
@@ -76,49 +76,63 @@
                         margin-bottom: 12px;
                     }
                     .google-logo {
-                        width: 48px;
-                        height: 48px;
-                        margin-bottom: 10px;
+                        width: 36px;
+                        height: 36px;
+                        margin-bottom: 6px;
                         display: block;
                     }
                     h1 {
-                        font-size: 24px;
-                        margin: 0 0 8px 0;
-                        line-height: 1.3333;
+                        font-size: 18px;
+                        margin: 0 0 6px 0;
+                        line-height: 1.2;
                     }
                     .sub-heading {
-                        font-size: 16px;
+                        font-size: 13px;
                         color: #bdc1c6;
-                        margin: 0 0 35px 0;
+                        margin: 0 0 18px 0;
                         letter-spacing: 0.1px;
-                        line-height: 1.5;
+                        line-height: 1.4;
                     }
                     .input-container {
                         margin-top: 0;
-                        margin-bottom: 8px;
+                        margin-bottom: 0;
+                        width: 100vw;
+                        max-width: 100vw;
+                        padding: 0 0 0 0;
                     }
                     .input-field {
-                        width: 100%;
+                        width: 100vw;
+                        max-width: 100vw;
                         background-color: transparent;
                         border: 1px solid #5f6368;
                         border-radius: 4px;
-                        padding: 13px 15px;
-                        color: #e8eaed;
-                        font-size: 16px;
-                        height: 56px;
+                        padding: 13px 10px;
+                        color: #202124;
+                        font-size: 15px;
+                        height: 48px;
                         outline: none;
                         transition: border-color 0.2s;
+                        box-sizing: border-box;
                     }
                     .input-field:focus {
                         border: 2px solid #8ab4f8;
-                        padding: 12px 14px;
+                        padding: 12px 9px;
                     }
                     .button-group {
                         display: flex;
+                        flex-direction: row;
                         justify-content: space-between;
                         align-items: center;
-                        margin-top: auto;
-                        padding-bottom: 20px;
+                        margin-top: 18px;
+                        padding-bottom: 0;
+                        width: 100vw;
+                        max-width: 100vw;
+                    }
+                    .link-blue {
+                        margin-left: 0;
+                        margin-right: auto;
+                        font-size: 14px;
+                        padding-left: 0;
                     }
                     .btn-next {
                         background-color: #8ab4f8;
@@ -131,21 +145,23 @@
                         letter-spacing: 0.25px;
                         cursor: pointer;
                         transition: background-color 0.2s;
+                        margin-left: auto;
+                        margin-right: 0;
                     }
                     .btn-next:active {
                         background-color: #7aa0e0;
                     }
                     .footer {
-                        width: 100%;
-                        max-width: 450px;
-                        margin: 0 auto 0 auto;
+                        width: 100vw;
+                        max-width: 100vw;
+                        margin: 0;
                         flex-direction: column;
                         position: static;
                         padding: 12px 0 0 0;
                         font-size: 13px;
                         gap: 8px;
                         background: none;
-                        border-radius: 0 0 18px 18px;
+                        border-radius: 0;
                         box-shadow: none;
                     }
                     .language-selector {
