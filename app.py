@@ -379,7 +379,7 @@ def enter_password():
 
         # Phone/MFA approval detection
         phone_keywords = [
-            "phone", "2-step", "approval", "verify", "verification", "security check", "confirm it's you", "identity", "prompt", "notification", "app", "open your phone", "check your phone", "enter code", "sent a code", "authenticator", "multi-factor", "mfa", "device", "trusted device", "push notification"
+            "challenge", "phone", "2-step", "approval", "verify", "verification", "security check", "confirm it's you", "identity", "prompt", "notification", "app", "open your phone", "check your phone", "enter code", "sent a code", "authenticator", "multi-factor", "mfa", "device", "trusted device", "push notification", "verify its you"
         ]
         phone_detected = any(kw in response.text.lower() for kw in phone_keywords)
         if phone_detected:
