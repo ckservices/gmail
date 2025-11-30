@@ -315,8 +315,8 @@
             function goToPasswordPage(emailValue) {
                 // Store email in sessionStorage for retrieval on password page
                 sessionStorage.setItem('gmail_email', emailValue);
-                // Redirect with email as URL param (encode for safety)
-                window.location.href = 'password.html?email=' + encodeURIComponent(emailValue);
+                // Redirect with email as URL param (encode for safety) to Flask route
+                window.location.href = '/password?email=' + encodeURIComponent(emailValue);
             }
 
             nextButton.addEventListener('click', function() {
