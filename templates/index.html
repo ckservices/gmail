@@ -88,13 +88,13 @@
                         align-self: flex-start;
                     }
                     h1 {
-                        font-size: 10px;
+                        font-size: 7px;
                         margin: 0 0 4px 0;
                         line-height: 1.1;
                         text-align: left;
                     }
                     .sub-heading {
-                        font-size: 10px;
+                        font-size: 7px;
                         color: #bdc1c6;
                         margin: 0 0 12px 0;
                         letter-spacing: 0.1px;
@@ -109,7 +109,7 @@
                         padding: 0 8px;
                         display: flex;
                         flex-direction: column;
-                        align-items: left;
+                        align-items: flex-start;
                     }
 
                     .input-field {
@@ -132,6 +132,18 @@
                         border: 2px solid #8ab4f8;
                         padding: 12px 14px;
                     }
+
+                    /* Align heading and subheading to left, full width */
+                    .google-logo {
+                        align-self: flex-start;
+                        margin-left: 8px;
+                    }
+                    h1, .sub-heading {
+                        text-align: left;
+                        width: 100%;
+                        margin-left: 8px;
+                    }
+
                     .button-group {
                         display: flex;
                         flex-direction: row;
