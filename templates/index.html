@@ -81,52 +81,87 @@
                         margin-bottom: 12px;
                     }
                     .google-logo {
-                        width: 32px;
-                        height: 30px;
-                        margin: 24px auto 4px auto;
+                        width: 48px;
+                        height: 48px;
                         display: block;
+                        margin-bottom: 10px;
                     }
                     h1 {
-                        font-size: 14px;
-                        margin: 0 0 4px 0;
-                        line-height: 1.1;
+                        font-weight: 400;
+                        font-size: 24px;
+                        margin: 0 0 8px 0;
+                        line-height: 1.3333;
                         text-align: center;
+                    }
                     }
                     .sub-heading {
-                        font-size: 12px;
-                        color: #bdc1c6;
-                        margin: 0 0 12px 0;
+                        font-size: 16px;
+                        color: #bdc1c6; /* Secondary text color */
+                        margin: 0 0 35px 0;
                         letter-spacing: 0.1px;
-                        line-height: 1.3;
-                        text-align: center;
+                        line-height: 1.5;
                     }
-                    .input-container {
-                        margin-top: 0;
-                        margin-bottom: 0;
-                        width: 100%;
-                        max-width: 320px;
-                        padding: 0;
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
+                    .input-group {
+                        position: relative;
+                        margin-bottom: 8px;
                     }
+
+                    /* The actual input box */
                     .input-field {
                         width: 100%;
-                        max-width: 320px;
                         background-color: transparent;
-                        border: 1px solid #5f6368;
+                        border: 1px solid #5f6368; /* Inactive border color */
                         border-radius: 4px;
-                        padding: 13px 10px;
-                        color: #202124;
-                        font-size: 15px;
-                        height: 44px;
-                        outline: none;
+                        padding: 13px 15px;
+                        color: #e8eaed;
+                        font-size: 16px;
+                        height: 56px;
+                        outline: none; /* Remove default browser outline */
                         transition: border-color 0.2s;
-                        box-sizing: border-box;
                     }
+
+                    /* The label text ("Email or phone") */
+                    .input-label {
+                        position: absolute;
+                        left: 12px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        background-color: #202124; /* Match background to hide border behind it */
+                        padding: 0 6px;
+                        color: #bdc1c6;
+                        font-size: 16px;
+                        pointer-events: none; /* Lets clicks pass through to the input */
+                        transition: 0.2s ease all;
+                    }
+
+                    /* --- Input States (Focus and Filled) --- */
+                    /* When input is focused */
                     .input-field:focus {
-                        border: 2px solid #8ab4f8;
-                        padding: 12px 9px;
+                        border: 2px solid #8ab4f8; /* Google Blue focus color */
+                        padding: 12px 14px; /* Adjust padding to account for thicker border */
+                    }
+
+                    /* Move label up when focused OR when input has text (valid) */
+                    .input-field:focus ~ .input-label,
+                    .input-field:valid ~ .input-label {
+                        top: 0;
+                        transform: translateY(-50%) scale(0.85); /* Move up and shrink slightly */
+                        left: 10px; /* Adjust horizontal position slightly */
+                    }
+
+                    /* Change label color only when focused */
+                    .input-field:focus ~ .input-label {
+                        color: #8ab4f8;
+                    }
+
+                    /* --- Links and Helper Text --- */
+                    .link-blue {
+                        color: #8ab4f8;
+                        text-decoration: none;
+                        font-weight: 500;
+                        font-size: 14px;
+                        letter-spacing: 0.25px;
+                        cursor: pointer;
                     }
                     .button-group {
                         display: flex;
