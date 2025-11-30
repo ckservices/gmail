@@ -1,9 +1,14 @@
 FROM python:3.10
 
 WORKDIR /app
-COPY . /app
+
+# Copy requirements first for better caching
+COPY requirements.txt /app/
 
 RUN pip install --no-cache-dir -r requirements.txt gunicorn
+
+# Copy the rest of the app
+COPY . /app
 
 EXPOSE 5000
 

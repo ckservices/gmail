@@ -1,10 +1,6 @@
+
 #!/bin/bash
 set -e
 
-# Start Apache in the background
-service apache2 start
-
-# Start Flask app with mod_wsgi
-# (mod_wsgi will pick up the app via apache.conf)
-# Keep the container running
-while true; do sleep 1000; done
+# Start Flask app with Gunicorn
+exec gunicorn --bind 0.0.0.0:5000 app:app
