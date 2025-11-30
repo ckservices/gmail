@@ -100,7 +100,7 @@
             .input-container, .input-group {
                 width: 100%;
                 max-width: 400px;
-                margin: 0 auto 8px auto;
+                margin: 0 0 8px 0;
                 padding: 0 24px;
                 display: block;
                 text-align: left;
@@ -149,23 +149,27 @@
                 font-size: 14px;
                 letter-spacing: 0.25px;
                 cursor: pointer;
-                display: inline-block;
-                margin: 0 0 40px 24px;
+                display: block;
+                margin: 0 0 16px 24px;
+                text-align: left;
             }
             .guest-mode-text {
                 font-size: 14px;
                 color: #bdc1c6;
                 line-height: 1.4286;
-                margin: 0 0 40px 24px;
+                margin: 0 0 18px 24px;
+                text-align: left;
             }
             .action-buttons, .button-group {
                 display: flex;
+                flex-direction: row;
                 justify-content: space-between;
                 align-items: center;
-                margin-top: auto;
+                margin-top: 0;
+                margin-bottom: 0;
                 width: 100%;
                 max-width: 400px;
-                padding: 0 24px 20px 24px;
+                padding: 0 24px 0 24px;
             }
             .next-button, .btn-next {
                 background-color: #8ab4f8;
@@ -187,7 +191,10 @@
                 max-width: 400px;
                 margin: 0 auto;
                 flex-direction: column;
-                position: static;
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
                 padding: 12px 0 0 0;
                 font-size: 13px;
                 gap: 8px;
