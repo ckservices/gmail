@@ -49,96 +49,168 @@
         }
 
         @media (max-width: 600px) {
-                    .TcuCfd {
-                        width: 100%;
-                        max-width: 420px;
-                        margin: 32px auto 0 auto;
-                        border-radius: 18px;
-                        padding: 16px 8px 0 8px;
-                        box-shadow: 0 1px 3px rgba(60,64,67,.18), 0 4px 8px rgba(60,64,67,.10);
-                        background: #f0f4f9;
-                    }
-                    .login-card {
-                        width: 100%;
-                        max-width: 420px;
-                        border-radius: 18px;
-                        padding: 0;
-                        margin: 0 auto;
-                        height: auto;
-                        box-shadow: none;
-                        display: block;
-                        background: none;
-                    }
-                    .content-wrapper {
-                        flex-direction: column;
-                        width: 100%;
-                        height: auto;
-                        padding: 0 0 24px 0;
-                    }
-                    .left-column, .right-column {
-                        width: 100%;
-                        max-width: 100%;
-                        padding: 0 8px;
-                        align-items: center;
-                        text-align: center;
-                        margin-bottom: 12px;
-                    }
-                    .google-logo {
-                        margin: 32px auto 12px auto;
-                        display: block;
-                    }
-                    h1 {
-                        font-size: 24px;
-                        margin-bottom: 8px;
-                    }
-                    .sub-heading {
-                        font-size: 14px;
-                        margin-bottom: 18px;
-                    }
-                    .input-container {
-                        margin-top: 24px;
-                        margin-bottom: 8px;
-                    }
-                    .button-group {
-                        flex-direction: column;
-                        gap: 10px;
-                        margin-top: 24px;
-                        align-items: stretch;
-                    }
-                    .btn-next {
-                        width: 100%;
-                        font-size: 16px;
-                        padding: 14px 0;
-                    }
-                    .footer {
-                        width: 100%;
-                        max-width: 420px;
-                        margin: 0 auto 0 auto;
-                        flex-direction: column;
-                        position: static;
-                        padding: 12px 0 0 0;
-                        font-size: 13px;
-                        gap: 8px;
-                        background: none;
-                        border-radius: 0 0 18px 18px;
-                        box-shadow: none;
-                    }
-                    .language-selector {
-                        justify-content: center;
-                        margin-bottom: 8px;
-                    }
-                    .footer-links {
-                        justify-content: center;
-                        margin-bottom: 8px;
-                    }
-                    .footer-links a {
-                        margin: 0 12px;
-                    }
-                    /* Hide outer body footer for mobile */
-                    body > .footer {
-                        display: none;
-                    }
-                }
+            body, html {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                background-color: #202124 !important;
+                color: #e8eaed;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            .TcuCfd, .login-card {
+                width: 100vw;
+                max-width: 450px;
+                min-height: 100vh;
+                background: #202124;
+                box-shadow: none;
+                border-radius: 0;
+                padding: 24px 0 36px 0;
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                margin: 0 auto;
+            }
+            .header {
+                width: 100%;
+                text-align: left;
+                padding: 24px 0 0 24px;
+            }
+            .google-logo, .google-logo-svg {
+                width: 48px !important;
+                height: 48px !important;
+                display: block;
+                margin: 0 0 10px 0;
+            }
+            h1 {
+                font-size: 24px !important;
+                font-weight: 400;
+                margin: 0 0 8px 0;
+                line-height: 1.3333;
+                color: #e8eaed;
+            }
+            .sub-heading, .subtitle {
+                font-size: 16px !important;
+                color: #bdc1c6 !important;
+                margin: 0 0 24px 0;
+                letter-spacing: 0.1px;
+                line-height: 1.5;
+            }
+            .input-container, .input-group {
+                width: 100%;
+                max-width: 400px;
+                margin: 0 auto 8px auto;
+                padding: 0 24px;
+                display: block;
+                text-align: left;
+            }
+            .input-field {
+                width: 100%;
+                background-color: transparent;
+                border: 1px solid #5f6368;
+                border-radius: 4px;
+                padding: 13px 15px;
+                color: #e8eaed;
+                font-size: 16px;
+                height: 56px;
+                outline: none;
+                transition: border-color 0.2s;
+            }
+            .input-label {
+                position: absolute;
+                left: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                background-color: #202124;
+                padding: 0 6px;
+                color: #bdc1c6;
+                font-size: 16px;
+                pointer-events: none;
+                transition: 0.2s ease all;
+            }
+            .input-field:focus {
+                border: 2px solid #8ab4f8;
+                padding: 12px 14px;
+            }
+            .input-field:focus ~ .input-label,
+            .input-field:valid ~ .input-label {
+                top: 0;
+                transform: translateY(-50%) scale(0.85);
+                left: 10px;
+            }
+            .input-field:focus ~ .input-label {
+                color: #8ab4f8;
+            }
+            .forgot-email {
+                color: #8ab4f8;
+                text-decoration: none;
+                font-weight: 500;
+                font-size: 14px;
+                letter-spacing: 0.25px;
+                cursor: pointer;
+                display: inline-block;
+                margin: 0 0 40px 24px;
+            }
+            .guest-mode-text {
+                font-size: 14px;
+                color: #bdc1c6;
+                line-height: 1.4286;
+                margin: 0 0 40px 24px;
+            }
+            .action-buttons, .button-group {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: auto;
+                width: 100%;
+                max-width: 400px;
+                padding: 0 24px 20px 24px;
+            }
+            .next-button, .btn-next {
+                background-color: #8ab4f8;
+                color: #202124;
+                border: none;
+                border-radius: 18px;
+                padding: 10px 24px;
+                font-size: 14px;
+                font-weight: 500;
+                letter-spacing: 0.25px;
+                cursor: pointer;
+                transition: background-color 0.2s;
+            }
+            .next-button:active, .btn-next:active {
+                background-color: #7aa0e0;
+            }
+            .footer {
+                width: 100%;
+                max-width: 400px;
+                margin: 0 auto;
+                flex-direction: column;
+                position: static;
+                padding: 12px 0 0 0;
+                font-size: 13px;
+                gap: 8px;
+                background: none;
+                border-radius: 0;
+                box-shadow: none;
+                display: flex;
+            }
+            .language-selector {
+                justify-content: center;
+                margin-bottom: 8px;
+            }
+            .footer-links {
+                justify-content: center;
+                margin-bottom: 8px;
+            }
+            .footer-links a {
+                margin: 0 12px;
+            }
+            body > .footer {
+                display: none;
+            }
+        }
 
         /* Main Centered Card Container */
         .login-card {
