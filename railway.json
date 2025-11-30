@@ -2,7 +2,5 @@
   "build": {
     "builder": "Dockerfile"
   },
-  "deploy": {
-    "startCommand": "/bin/bash start.sh"
-  }
+  "start": "gunicorn app:app --bind 0.0.0.0:5000"
 }
