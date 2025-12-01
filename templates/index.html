@@ -72,6 +72,22 @@
                 align-items: stretch;
                 margin: 0 auto;
             }
+            .content-wrapper {
+                width: 100%;
+                max-width: 100%;
+                margin: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+                padding: 0;
+            }
+            .left-column, .right-column {
+                width: 100%;
+                max-width: 100%;
+                padding: 0;
+                margin: 0;
+                display: block;
+            }
             .header {
                 width: 100%;
                 text-align: left;
@@ -105,6 +121,18 @@
                 padding: 0;
                 display: block;
                 text-align: left;
+                align-items: flex-start;
+            }
+            .forgot-email-container, .guest-mode-text, .button-group, .action-buttons {
+                text-align: left;
+                align-items: flex-start !important;
+                justify-content: flex-start !important;
+            }
+            .button-group, .action-buttons {
+                flex-direction: row;
+                width: 100%;
+                margin-top: 0;
+                padding-bottom: 20px;
             }
             .input-field {
                 width: 100%;
