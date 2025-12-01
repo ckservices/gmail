@@ -55,23 +55,175 @@
                 height: 100%;
                 background-color: #202124 !important;
                 color: #e8eaed;
-                display: flex;
-                justify-content: center;
-                align-items: center;
             }
             .TcuCfd, .login-card {
                 width: 100vw;
-                max-width: 450px;
+                max-width: 420px;
                 min-height: 100vh;
                 background: #202124;
                 box-shadow: none;
                 border-radius: 0;
-                padding: 24px 0 36px 0;
+                padding: 0 0 0 0;
+                margin: 0 auto;
                 display: flex;
                 flex-direction: column;
-                align-items: flex-start;
-                margin: 0 auto;
+                align-items: center;
+                justify-content: flex-start;
+                position: relative;
             }
+            .content-wrapper {
+                width: 100%;
+                max-width: 420px;
+                margin: 0 auto;
+                background: #202124;
+                border-radius: 0;
+                box-shadow: none;
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+                justify-content: flex-start;
+                padding: 0 0 80px 0;
+                min-height: 100vh;
+                position: relative;
+            }
+            .left-column, .right-column {
+                width: 100%;
+                max-width: 100%;
+                padding: 0;
+                margin: 0;
+                display: block;
+            }
+            .header {
+                width: 100%;
+                text-align: left;
+                padding: 32px 24px 0 24px;
+            }
+            .google-logo, .google-logo-svg {
+                width: 48px !important;
+                height: 48px !important;
+                display: block;
+                margin-bottom: 10px;
+            }
+            h1 {
+                font-size: 24px !important;
+                font-weight: 400;
+                margin: 0 0 8px 0;
+                line-height: 1.3333;
+                color: #e8eaed;
+            }
+            .sub-heading, .subtitle {
+                font-size: 16px !important;
+                color: #bdc1c6 !important;
+                margin: 0 0 24px 0;
+                letter-spacing: 0.1px;
+                line-height: 1.5;
+            }
+            .input-container, .input-group {
+                width: 100%;
+                max-width: 100%;
+                margin: 0 0 8px 0;
+                padding: 0 24px;
+                display: flex;
+                flex-direction: row;
+                align-items: flex-end;
+                text-align: left;
+                gap: 8px;
+                justify-content: flex-start;
+            }
+            .input-field {
+                flex: 1 1 auto;
+                min-width: 0;
+                width: 100%;
+                background-color: transparent;
+                border: 1px solid #5f6368;
+                border-radius: 4px;
+                padding: 13px 15px;
+                color: #e8eaed;
+                font-size: 16px;
+                height: 56px;
+                outline: none;
+                transition: border-color 0.2s;
+            }
+            .forgot-email {
+                color: #8ab4f8;
+                text-decoration: none;
+                font-weight: 500;
+                font-size: 14px;
+                letter-spacing: 0.25px;
+                cursor: pointer;
+                display: inline-block;
+                margin: 0 0 0 12px;
+                white-space: nowrap;
+                align-self: flex-end;
+            }
+            .guest-mode-text {
+                font-size: 14px;
+                color: #bdc1c6;
+                line-height: 1.4286;
+                margin: 16px 0 18px 24px;
+                text-align: left;
+            }
+            .button-group, .action-buttons {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                width: 100%;
+                max-width: 100%;
+                padding: 0 24px;
+                margin: 0 0 0 0;
+            }
+            .button-group button, .action-buttons button, .action-buttons a, .button-group a {
+                min-width: 0;
+            }
+            .btn-next, .next-button {
+                background-color: #8ab4f8;
+                color: #202124;
+                border: none;
+                border-radius: 18px;
+                padding: 10px 24px;
+                font-size: 14px;
+                font-weight: 500;
+                letter-spacing: 0.25px;
+                cursor: pointer;
+                transition: background-color 0.2s;
+                margin-left: auto;
+            }
+            .btn-next:active, .next-button:active {
+                background-color: #7aa0e0;
+            }
+            .footer {
+                width: 100%;
+                max-width: 420px;
+                margin: 0 auto;
+                flex-direction: column;
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                padding: 12px 0 0 0;
+                font-size: 13px;
+                gap: 8px;
+                background: none;
+                border-radius: 0;
+                box-shadow: none;
+                display: flex;
+            }
+            .language-selector {
+                justify-content: center;
+                margin-bottom: 8px;
+            }
+            .footer-links {
+                justify-content: center;
+                margin-bottom: 8px;
+            }
+            .footer-links a {
+                margin: 0 12px;
+            }
+            body > .footer {
+                display: none;
+            }
+        }
             .header {
                 width: 100%;
                 text-align: left;
