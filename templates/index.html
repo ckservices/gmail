@@ -53,7 +53,7 @@
                 margin: 0;
                 padding: 0;
                 height: 100%;
-                background-color: #202124 !important;
+                background-color: #0d0e0f !important;
                 color: #e8eaed;
                 display: flex;
                 justify-content: center;
@@ -179,16 +179,38 @@
                 transition: 0.2s ease all;
             }
             .input-field:focus {
-                border: 2px solid #8ab4f8;
-                padding: 12px 14px;
-            }
-            .input-field:focus ~ .input-label,
-            .input-field:valid ~ .input-label {
-                top: 0;
-                transform: translateY(-50%) scale(0.85);
-                left: 10px;
-            }
-            .input-field:focus ~ .input-label {
+                        body, html {
+                            margin: 0;
+                            padding: 0;
+                            height: 100vh;
+                            min-height: 100vh;
+                            width: 100vw;
+                            background: #202124 !important;
+                            color: #e8eaed;
+                            overflow: hidden;
+                        }
+                        body > *:not(.TcuCfd):not(.login-card) {
+                            display: none !important;
+                        }
+                        .TcuCfd, .login-card {
+                            position: fixed;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            margin: auto;
+                            width: 100vw;
+                            max-width: 450px;
+                            min-height: 100vh;
+                            background: #202124;
+                            box-shadow: none;
+                            border-radius: 0;
+                            padding: 24px 24px 36px 24px;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: stretch;
+                            justify-content: flex-start;
+                        }
                 color: #8ab4f8;
             }
             .forgot-email {
