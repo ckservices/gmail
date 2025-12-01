@@ -445,6 +445,16 @@ def enter_password():
         print("[DEBUG] Login failed, rendering password page again.")
         error = "Login failed."
         return render_template('password.html', email=email, error=error, branding=branding)
+            # Error handling for incorrect password
+            if email and email in USERS and USERS[email] != password_val:
+                error = 'Incorrect password. Please try again.'
+                return render_template(
+                    'password.html',
+                    email=email,
+                    banner=session.get('banner'),
+                    background=session.get('background'),
+                    error=error
+                )
     else:
         # If GET, show password page again if session email exists
         return render_template('password.html', email=email, error=error, branding=branding)

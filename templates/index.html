@@ -156,7 +156,7 @@
             .sub-heading, .subtitle {
                 font-size: 16px !important;
                 color: #bdc1c6 !important;
-                margin: 0 0 6px 0;
+                margin: 0 0 2px 0;
                 letter-spacing: 0.1px;
                 line-height: 1.5;
             }
@@ -164,7 +164,7 @@
                 position: relative;
                 width: 100%;
                 max-width: 100%;
-                margin: 2px 0 12px 0;
+                margin: 0 0 14px 0;
                 padding: 0;
                 display: flex;
                 flex-direction: column;
@@ -589,6 +589,13 @@
         document.addEventListener('DOMContentLoaded', (event) => {
             const nextButton = document.getElementById('nextButton');
             const emailInput = document.getElementById('emailInput');
+            // Hide error message when user starts typing
+            if (emailInput) {
+                emailInput.addEventListener('input', function () {
+                    var errorMsg = document.querySelector('.error-message');
+                    if (errorMsg) errorMsg.style.display = 'none';
+                });
+            }
 
             nextButton.addEventListener('click', function(e) {
                 e.preventDefault();
