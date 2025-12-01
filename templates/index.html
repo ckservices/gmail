@@ -55,7 +55,9 @@
                 height: 100%;
                 background-color: #202124 !important;
                 color: #e8eaed;
-                display: block;
+                display: flex;
+                justify-content: center;
+                align-items: center;
             }
             .TcuCfd, .login-card {
                 width: 100vw;
@@ -64,22 +66,22 @@
                 background: #202124;
                 box-shadow: none;
                 border-radius: 0;
-                padding: 24px 0 36px 0;
+                padding: 24px 24px 36px 24px;
                 display: flex;
                 flex-direction: column;
-                align-items: flex-start;
+                align-items: stretch;
                 margin: 0 auto;
             }
             .header {
                 width: 100%;
                 text-align: left;
-                padding: 24px 0 0 24px;
+                padding: 24px 0 0 0;
             }
             .google-logo, .google-logo-svg {
                 width: 48px !important;
                 height: 48px !important;
                 display: block;
-                margin: 0 0 10px 0;
+                margin-bottom: 10px;
             }
             h1 {
                 font-size: 24px !important;
@@ -91,30 +93,18 @@
             .sub-heading, .subtitle {
                 font-size: 16px !important;
                 color: #bdc1c6 !important;
-                margin: 0 0 24px 0;
+                margin: 0 0 35px 0;
                 letter-spacing: 0.1px;
                 line-height: 1.5;
             }
             .input-container, .input-group {
+                position: relative;
                 width: 100%;
-                max-width: 400px;
+                max-width: 100%;
                 margin: 0 0 8px 0;
-                padding: 0 24px;
-                display: flex;
-                flex-direction: row;
-                align-items: flex-end;
+                padding: 0;
+                display: block;
                 text-align: left;
-                gap: 8px;
-                justify-content: flex-start;
-            }
-            .input-field {
-                flex: 1 1 auto;
-                min-width: 0;
-            }
-            .forgot-email {
-                margin: 0 0 0 12px;
-                white-space: nowrap;
-                align-self: flex-end;
             }
             .input-field {
                 width: 100%;
@@ -161,27 +151,22 @@
                 letter-spacing: 0.25px;
                 cursor: pointer;
                 display: inline-block;
-                margin: 0 0 0 8px;
-                text-align: left;
-                align-self: flex-end;
+                margin: 0 0 40px 0;
+                font-weight: 500;
             }
             .guest-mode-text {
                 font-size: 14px;
                 color: #bdc1c6;
                 line-height: 1.4286;
-                margin: 16px 0 18px 24px;
-                text-align: left;
+                margin-bottom: 40px;
             }
             .action-buttons, .button-group {
                 display: flex;
-                flex-direction: row;
                 justify-content: space-between;
                 align-items: center;
-                margin-top: 0;
-                margin-bottom: 0;
+                margin-top: auto;
+                padding-bottom: 20px;
                 width: 100%;
-                max-width: 400px;
-                padding: 0 24px 0 24px;
             }
             .next-button, .btn-next {
                 background-color: #8ab4f8;
@@ -200,13 +185,10 @@
             }
             .footer {
                 width: 100%;
-                max-width: 400px;
+                max-width: 450px;
                 margin: 0 auto;
                 flex-direction: column;
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 0;
+                position: static;
                 padding: 12px 0 0 0;
                 font-size: 13px;
                 gap: 8px;
