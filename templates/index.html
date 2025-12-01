@@ -52,14 +52,23 @@
             body, html {
                 margin: 0;
                 padding: 0;
-                height: 100%;
-                background-color: #0d0e0f !important;
+                height: 100vh;
+                min-height: 100vh;
+                width: 100vw;
+                background: #202124 !important;
                 color: #e8eaed;
-                display: flex;
-                justify-content: center;
-                align-items: center;
+                overflow: hidden;
+            }
+            body > *:not(.TcuCfd):not(.login-card) {
+                display: none !important;
             }
             .TcuCfd, .login-card {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                margin: auto;
                 width: 100vw;
                 max-width: 450px;
                 min-height: 100vh;
@@ -70,66 +79,46 @@
                 display: flex;
                 flex-direction: column;
                 align-items: stretch;
-                margin: 0 auto;
+                justify-content: flex-start;
             }
-            .content-wrapper {
-                width: 100%;
-                max-width: 100%;
-                margin: 0;
-                display: flex;
-                flex-direction: column;
-                padding: 0;
-                min-height: 100vh;
-            }
-            .left-column {
-                width: 100%;
-                max-width: 100%;
-                padding: 0;
-                margin: 0;
-                display: flex;
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .right-column {
-                width: 100%;
-                max-width: 100%;
-                padding: 0;
-                margin: 0;
-                display: flex;
-                flex-direction: column;
-                align-items: stretch;
-                flex: 1 1 auto;
-            }
-            .footer {
-                width: 100%;
+            .TcuCfd, .login-card {
+                width: 100vw;
                 max-width: 450px;
-                margin: 24px auto 0 auto;
-                flex-direction: column;
-                position: static;
-                padding: 12px 0 0 0;
-                font-size: 13px;
-                gap: 8px;
-                background: none;
-                border-radius: 0;
+                min-height: 100vh;
+                background: #202124;
                 box-shadow: none;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            body > .footer {
-                display: none !important;
-            }
-            .left-column, .right-column {
-                width: 100%;
-                max-width: 100%;
-                padding: 0;
-                margin: 0;
-                display: block;
-            }
-            .right-column {
-                padding: 0;
-            }
-            .left-column, .right-column {
+                .content-wrapper {
+                    width: 100%;
+                    max-width: 100%;
+                    margin: 0;
+                    display: flex;
+                    flex-direction: column;
+                    padding: 0;
+                    min-height: 100vh;
+                }
+                .left-column, .right-column {
+                    width: 100%;
+                    max-width: 100%;
+                    padding: 0;
+                    margin: 0;
+                    display: block;
+                }
+                .footer {
+                    width: 100%;
+                    max-width: 450px;
+                    margin: 24px auto 0 auto;
+                    flex-direction: column;
+                    position: static;
+                    padding: 12px 0 0 0;
+                    font-size: 13px;
+                    gap: 8px;
+                    background: none;
+                    border-radius: 0;
+                    box-shadow: none;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
                 width: 100%;
                 max-width: 100%;
                 padding: 0;
@@ -192,6 +181,20 @@
                 width: 100%;
                 margin-top: 0;
                 padding-bottom: 20px;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .button-group button.link-blue, .action-buttons .link-blue {
+                margin-left: 0;
+                margin-right: auto;
+            }
+            .button-group .btn-next, .action-buttons .next-button {
+                margin-left: auto;
+                margin-right: 0;
+                align-self: flex-end;
+            }
+            .TcuCfd, .login-card {
+                margin-top: 0 !important;
             }
             .input-field {
                 width: 100%;
@@ -567,8 +570,8 @@
                 </div>
             </div>
         </div>
-    </main>
 
+    <!-- Move footer inside the main card for mobile view only -->
     <footer class="footer">
         <div class="language-selector">
             <span>English (United States)</span>
@@ -580,6 +583,7 @@
             <a href="#">Terms</a>
         </div>
     </footer>
+</main>
 
     <script>
         document.addEventListener('DOMContentLoaded', (event) => {
