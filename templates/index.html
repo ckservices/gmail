@@ -108,6 +108,16 @@
                 margin: 0;
                 display: block;
             }
+            .right-column {
+                padding: 0;
+            }
+            .left-column, .right-column {
+                width: 100%;
+                max-width: 100%;
+                padding: 0;
+                margin: 0;
+                display: block;
+            }
             .header {
                 width: 100%;
                 text-align: left;
@@ -129,7 +139,7 @@
             .sub-heading, .subtitle {
                 font-size: 16px !important;
                 color: #bdc1c6 !important;
-                margin: 0 0 2px 0;
+                margin: 0 0 6px 0;
                 letter-spacing: 0.1px;
                 line-height: 1.5;
             }
@@ -137,11 +147,12 @@
                 position: relative;
                 width: 100%;
                 max-width: 100%;
-                margin: 4px 0 8px 0;
+                margin: 2px 0 12px 0;
                 padding: 0;
-                display: block;
+                display: flex;
+                flex-direction: column;
                 text-align: left;
-                align-items: flex-start;
+                align-items: stretch;
             }
             .forgot-email-container, .guest-mode-text, .button-group, .action-buttons {
                 text-align: left;
@@ -256,9 +267,12 @@
             .footer {
                 width: 100%;
                 max-width: 450px;
-                margin: 24px auto 0 auto;
+                margin: auto 0 0 0;
                 flex-direction: column;
-                position: static;
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
                 padding: 12px 0 0 0;
                 font-size: 13px;
                 gap: 8px;
