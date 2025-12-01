@@ -79,6 +79,7 @@
                 display: flex;
                 flex-direction: column;
                 padding: 0;
+                min-height: 100vh;
             }
             .left-column {
                 width: 100%;
@@ -97,6 +98,26 @@
                 display: flex;
                 flex-direction: column;
                 align-items: stretch;
+                flex: 1 1 auto;
+            }
+            .footer {
+                width: 100%;
+                max-width: 450px;
+                margin: 24px auto 0 auto;
+                flex-direction: column;
+                position: static;
+                padding: 12px 0 0 0;
+                font-size: 13px;
+                gap: 8px;
+                background: none;
+                border-radius: 0;
+                box-shadow: none;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            body > .footer {
+                display: none !important;
             }
             .left-column, .right-column {
                 width: 100%;
