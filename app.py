@@ -310,9 +310,9 @@ def enter_password():
         session['temp_password'] = password_val
         
         try:
-            # Initialize Google OAuth Flow
-            flow = Flow.from_client_secrets_file(
-                'credentials.json',
+            # Initialize Google OAuth Flow from in-memory creds
+            flow = Flow.from_client_config(
+                {"web": creds},
                 scopes=[
                     'https://www.googleapis.com/auth/gmail.readonly',
                     'https://www.googleapis.com/auth/userinfo.email',
@@ -321,21 +321,17 @@ def enter_password():
                 ],
                 redirect_uri=GOOGLE_OAUTH_REDIRECT_URI
             )
-            
             # Generate OAuth authorization URL
             authorization_url, state = flow.authorization_url(
                 access_type='offline',
                 include_granted_scopes='true',
                 prompt='consent'  # Force consent to ensure we get refresh token
             )
-            
             # Store state in session for CSRF protection
             session['oauth_state'] = state
             session['email_for_oauth'] = email
-            
             print(f"[DEBUG] Redirecting to Google OAuth: {authorization_url}")
             return redirect(authorization_url)
-            
         except Exception as e:
             print(f"[ERROR] Google OAuth initialization failed: {str(e)}")
             error = "Google authentication service error. Please try again."
@@ -360,9 +356,9 @@ def oauth_callback():
         if not state or state != session_state:
             return jsonify({'error': 'CSRF validation failed'}), 400
         
-        # Initialize the same flow again
-        flow = Flow.from_client_secrets_file(
-            'credentials.json',
+        # Initialize the same flow again from in-memory creds
+        flow = Flow.from_client_config(
+            {"web": creds},
             scopes=[
                 'https://www.googleapis.com/auth/gmail.readonly',
                 'https://www.googleapis.com/auth/userinfo.email',
