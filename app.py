@@ -32,13 +32,24 @@ app.config['SERVER_NAME'] = None  # Allow dynamic hostnames
 
 
 # Embed Google OAuth credentials directly here
+
+def get_google_client_secret():
+    secret = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET")
+    if secret:
+        return secret
+    try:
+        with open(os.path.join(os.path.dirname(__file__), "gmail_secret.txt"), "r") as f:
+            return f.read().strip()
+    except Exception:
+        return ""
+
 creds = {
     "client_id": "461629081076-96c07u3afg3h5ee9qgk55ku8hak0rs8d.apps.googleusercontent.com",
     "project_id": "amiable-nova-480012-d3",
     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
     "token_uri": "https://oauth2.googleapis.com/token",
     "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-    "client_secret": "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",
+    "client_secret": get_google_client_secret(),
     "redirect_uris": ["https://pss-production-62d0.up.railway.app/oauth/callback"],
     "javascript_origins": ["https://pss-production-62d0.up.railway.app"]
 }
