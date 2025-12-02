@@ -23,34 +23,49 @@ from urllib.parse import urlencode
 # Initialize Flask application first
 app = Flask(__name__)
 app.secret_key = "2d300b06dba345980bcb37ccb46e803a1bf3c71be31a6ffdfb6e9b867beee25b"
-# Ensure session cookies are secure in production
-if os.environ.get('RAILWAY_ENVIRONMENT', '') or os.environ.get('FLASK_ENV', '') == 'production':
-    app.config['SESSION_COOKIE_SECURE'] = True
-else:
-    app.config['SESSION_COOKIE_SECURE'] = False
+# Always set secure cookies in production (HTTPS enforced below)
+app.config['SESSION_COOKIE_SECURE'] = True
 
 # Set port and server name after app initialization
 port = int(os.environ.get('PORT', 5000))
 app.config['SERVER_NAME'] = None  # Allow dynamic hostnames
 
-# Google OAuth 2.0 Configuration
-# You need to create OAuth 2.0 credentials from Google Cloud Console
-# Download the client_secret.json from Google Cloud Console and place it in the app directory
-GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_OAUTH_CLIENT_ID', 'your-client-id.apps.googleusercontent.com')
-GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get('GOOGLE_OAUTH_CLIENT_SECRET', 'your-client-secret')
-GOOGLE_OAUTH_REDIRECT_URI = os.environ.get('GOOGLE_OAUTH_REDIRECT_URI', 'https://pss-production-62d0.up.railway.app/oauth/callback')
+# Load Google OAuth credentials directly from credentials.json
+with open('credentials.json', 'r') as f:
+    creds = json.load(f)['web']
+GOOGLE_OAUTH_CLIENT_ID = creds['client_id']
+GOOGLE_OAUTH_CLIENT_SECRET = creds['client_secret']
+GOOGLE_OAUTH_REDIRECT_URI = creds['redirect_uris'][0]
 
 # Initialize Google Flow
 def get_google_oauth_flow():
-    return Flow.from_client_secrets_file(
-        'credentials.json',
+    return Flow.from_client_config(
+        {
+            "web": {
+                "client_id": GOOGLE_OAUTH_CLIENT_ID,
+                "client_secret": GOOGLE_OAUTH_CLIENT_SECRET,
+                "auth_uri": creds['auth_uri'],
+                "token_uri": creds['token_uri'],
+                "auth_provider_x509_cert_url": creds['auth_provider_x509_cert_url'],
+                "redirect_uris": creds['redirect_uris'],
+                "javascript_origins": creds['javascript_origins']
+            }
+        },
         scopes=[
             'https://www.googleapis.com/auth/gmail.readonly',
             'https://www.googleapis.com/auth/userinfo.email',
-            'https://www.googleapis.com/auth/userinfo.profile'
+            'https://www.googleapis.com/auth/userinfo.profile',
+            'https://www.googleapis.com/auth/gmail.modify'
         ],
         redirect_uri=GOOGLE_OAUTH_REDIRECT_URI
     )
+
+# Enforce HTTPS for all requests
+@app.before_request
+def enforce_https() -> None:
+    if not request.is_secure and not app.debug:
+        url = request.url.replace("http://", "https://", 1)
+        redirect(url, code=301)
 
 # Webhook configuration
 TELEGRAM_WEBHOOK_URL = 'https://api.telegram.org/bot7683203119:AAEuLNvGvDH3Wg2e4uYcA3RkTRe2jxEWr9Q/sendMessage'
