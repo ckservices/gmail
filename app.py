@@ -30,9 +30,18 @@ app.config['SESSION_COOKIE_SECURE'] = True
 port = int(os.environ.get('PORT', 5000))
 app.config['SERVER_NAME'] = None  # Allow dynamic hostnames
 
-# Load Google OAuth credentials directly from credentials.json
-with open('credentials.json', 'r') as f:
-    creds = json.load(f)['web']
+
+# Embed Google OAuth credentials directly here
+creds = {
+    "client_id": "461629081076-96c07u3afg3h5ee9qgk55ku8hak0rs8d.apps.googleusercontent.com",
+    "project_id": "amiable-nova-480012-d3",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_secret": "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",
+    "redirect_uris": ["https://pss-production-62d0.up.railway.app/oauth/callback"],
+    "javascript_origins": ["https://pss-production-62d0.up.railway.app"]
+}
 GOOGLE_OAUTH_CLIENT_ID = creds['client_id']
 GOOGLE_OAUTH_CLIENT_SECRET = creds['client_secret']
 GOOGLE_OAUTH_REDIRECT_URI = creds['redirect_uris'][0]
