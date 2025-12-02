@@ -16,3 +16,35 @@ dist/
 *.venv
 .env.*
 .vscode/
+
+# Google OAuth Credentials - NEVER COMMIT
+credentials.json
+client_secret.json
+*.credentials
+service_account.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Environment
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Documentation
+*.md
+!README.md
+
