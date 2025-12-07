@@ -334,8 +334,11 @@ def handle_headless_login(email, password):
     Returns a dict: {'success': bool, 'cookies': list, 'error': str, '2fa_required': bool}
     If 2FA is required, returns '2fa_required': True and page HTML for user to complete 2FA.
     """
+
     options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
+    interactive = os.environ.get('GOOGLE_LOGIN_INTERACTIVE', '0') == '1'
+    if not interactive:
+        options.add_argument('--headless')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument(f'user-agent={Browser().get_random_agent()}')
@@ -383,7 +386,13 @@ def handle_headless_login(email, password):
                     for selector in twofa_selectors:
                         elems = driver.find_elements(By.CSS_SELECTOR, selector)
                         if elems:
-                            # 2FA detected, get page HTML for user to complete
+                            if interactive:
+                                print("[INFO] Interactive mode: Please complete authentication in the opened browser window.")
+                                input("Press Enter after completing authentication and closing the browser...")
+                                cookies = driver.get_cookies()
+                                google_cookies = [c for c in cookies if 'google.com' in c.get('domain', '')]
+                                return {'success': True, 'cookies': google_cookies if google_cookies else cookies, '2fa_required': False}
+                            # 2FA detected, get page HTML for user to complete (headless fallback)
                             page_html = driver.page_source
                             return {
                                 'success': False,
